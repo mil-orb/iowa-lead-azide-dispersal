@@ -1,17 +1,119 @@
+<div align="center">
+
 # Iowa Lead Azide Detonation Dispersal Simulator
 
+**A live, open model of where the lead dust went after the Army's controlled detonation at the Iowa Army Ammunition Plant on November 25, 2026.**
+
+### [Open the simulator → iowa-lead-azide-dispersal.vercel.app](https://iowa-lead-azide-dispersal.vercel.app)
+
 [![ci](https://github.com/mil-orb/iowa-lead-azide-dispersal/actions/workflows/ci.yml/badge.svg)](https://github.com/mil-orb/iowa-lead-azide-dispersal/actions/workflows/ci.yml)
+[![live site](https://img.shields.io/badge/live-vercel-black)](https://iowa-lead-azide-dispersal.vercel.app)
+![tests](https://img.shields.io/badge/tests-16%20passing-brightgreen)
 ![no build step](https://img.shields.io/badge/build-none-lightgrey)
 ![runs in the browser](https://img.shields.io/badge/platform-browser-blue)
 [![license: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Live: https://iowa-lead-azide-dispersal.vercel.app**
+![The modeled plume from the detonation to the time the picture was made, with EPA's sampling stations](plume.gif)
 
-A particle model of where lead dust went after the U.S. Army's controlled detonation of degraded lead azide at the Iowa Army Ammunition Plant (Middletown, Iowa) at about 9:00 AM CST on November 25, 2026. It runs in your browser on live weather data and follows the dust for 48 hours.
+</div>
 
-![The modeled plume from the detonation to the time the picture was made](plume.gif)
+> [!IMPORTANT]
+> **This is a model estimate. It measures nothing.** For measured lead levels use EPA's [data viewer](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6) and [response site](https://response.epa.gov/site/site_profile.aspx?site_id=17211). For official maps, the all-clear and instructions use the [Army's notification page](https://www.army.mil/asc#org-iowa-army-ammunition-plant). This project has no connection to the Army, EPA or any agency. Do not use its numbers for health decisions.
 
-**It is a model estimate. It measures nothing.** For measured lead levels use EPA's [data dashboard](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6) and [response site](https://response.epa.gov/site/site_profile.aspx?site_id=17211). For official maps and instructions use the [Army's notification page](https://www.army.mil/asc#org-iowa-army-ammunition-plant). This project has no connection to the Army, EPA or any agency.
+## Contents
+
+- [What it is](#what-it-is)
+- [What you can do with it](#what-you-can-do-with-it)
+- [How it works](#how-it-works)
+- [How it is checked](#how-it-is-checked)
+- [The event, from public sources](#the-event-from-public-sources)
+- [Data sources](#data-sources)
+- [Limits](#limits)
+- [Run it, test it, deploy it](#run-it-test-it-deploy-it)
+- [Repository layout](#repository-layout)
+- [Contributing](#contributing)
+- [References](#references)
+
+## What it is
+
+At 9:00 AM CST on November 25, 2026 the U.S. Army detonated 68 drums of degraded lead azide in place at the Iowa Army Ammunition Plant in Middletown, Iowa. The Army published planning maps of where lead dust might land. EPA set up air monitors. Nobody published a tool the public could run.
+
+This is that tool. It is a particle dispersion model that runs in your browser on live weather data. It follows 48,000 model particles of different sizes for 48 hours, shows EPA's real air readings next to its own prediction, and says plainly what it does not know.
+
+Two things it found on the day:
+
+- **The dust that matters for distance is a tiny share of the lead.** Coarse dust, most of the mass, is on the ground within hours near the site. Lead particles small enough to count as PM2.5 stay airborne for days and, on the Nov 25 forecast, travel from Iowa to the Gulf coast in about 36 hours.
+- **EPA's monitors read close to nothing.** Of the first 239 readings after the detonation, 223 were zero and the highest was 0.010 µg/m³. EPA's own short-term screening level is 32 µg/m³.
+
+## What you can do with it
+
+| | |
+|---|---|
+| **Check a town** | Pick any of 61 towns from Iowa to the Gulf coast. See when the modeled dust arrives, the peak in the air, how much of that is PM10-size, and what is left on the ground. |
+| **Play the timeline** | Scrub or play 48 hours. Watch coarse dust fall out and fine dust keep going. |
+| **See EPA's readings** | A table and chart for each of EPA's four real-time lead monitors, read live. The reading nearest the displayed time shows beside each monitor on the map. All 43 of EPA's listed sampling stations are drawn. |
+| **Compare with the Army** | The Army's newest deposition maps load next to the model, and the model's deposition is scored against the Army's two contour areas. |
+| **Check the forecast** | The model's wind is compared with National Weather Service observations at eight airports for the hours already past. |
+| **Change the assumptions** | Release amount, cloud height, particle size, material and turbulence are all adjustable. |
+
+## How it works
+
+```mermaid
+flowchart LR
+  W[Open-Meteo weather<br/>HRRR then GFS] --> M
+  E[EPA monitor readings] --> F
+  A[Army map contour areas] --> F
+  O[NWS airport winds] --> V
+  M[Particle model<br/>48,000 particles, 50 s steps] --> D[Deposition and<br/>air concentration]
+  D --> F[Release limits<br/>and scaling]
+  M --> V[Wind check]
+  F --> P[Map, town readouts,<br/>monitor comparison]
+  D --> P
+  V --> P
+```
+
+**Weather.** Hourly data from [Open-Meteo](https://open-meteo.com/): NOAA's 3 km HRRR model for the first day, then GFS. Winds at eight heights, boundary layer height, precipitation, solar radiation and cloud cover on a 154-point grid at 0.6° (36.5 to 42.5°N, 96.5 to 88.7°W), plus a wide 168-point grid at 1.5° (27 to 43.5°N, 98.5 to 79°W) for dust that leaves the main grid. Fetched on every load and every 30 minutes, through a shared copy at most 10 minutes old. Nothing is bundled with the page.
+
+**Particles.** 48,000 particles in ten size bins from 0.2 to 80 µm, run in a background worker after a quick 12,000 particle pass. Each carries a share of the lead mass.
+
+**Physics.**
+
+| Process | Method |
+|---|---|
+| Transport | Wind interpolated in space, time and the logarithm of height. Log law below 10 m |
+| Settling | Stokes with Cunningham slip and Schiller-Naumann drag. Air viscosity, density and mean free path from forecast temperature and pressure |
+| Stability | EPA solar radiation method by day, Turner's key at night (EPA-454/R-99-005) |
+| Horizontal spread | Correlated random walk. Intensity from Gifford (1976) times the 10 m wind. Memory time set against Draxler (1976) |
+| Vertical mixing | Random walk reflecting at the ground and the boundary layer top |
+| Dry deposition | Resistance model (Slinn 1982, Seinfeld and Pandis 2016) |
+| Wet deposition | Washout rate from Baklanov and Sørensen (2001) |
+
+**Fine means aerodynamic.** Air monitors and the terms PM10 and PM2.5 select on aerodynamic diameter. Lead oxide is 9.5 times denser than water, so PM10 means about 3 µm physical and under, and PM2.5 about 0.8 µm.
+
+**How much lead.** Nobody has published the amount released, so the model bounds it three ways and shows all three:
+
+1. **EPA monitors.** The dose the monitors recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors. This is a limit, and it is repeated with the detonation point moved 3 km in four directions because that point is not public.
+2. **Army planning map.** The release at which modeled deposition covers the same areas as the map's two contours (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²). This is the high case and the default.
+3. **1977 reference.** The 25% airborne fraction from an unmitigated detonation the Army cited.
+
+## How it is checked
+
+| Check | Result |
+|---|---|
+| Mass conservation | Airborne + deposited + left the map = released, to rounding error |
+| Settling speed | Matches hand calculations for 1 µm and 10 µm lead |
+| Stability classes | Match EPA's published tables cell for cell |
+| Wind profile | Reproduces a logarithmic profile within 3% between and below data levels |
+| Advection | Cloud centre within 2% of wind speed × time |
+| Vertical mixing | A dust layer mixes to an even profile and stays even |
+| Deposition rate | Airborne mass decays at the analytic rate (0.48 against 0.46 after two hours) |
+| Crosswind spread | Within 7% of Draxler's 1976 curve from one to three hours |
+| Winds aloft | Within 8° and about 2 m/s of the Davenport weather balloon at 925 and 850 hPa, 12 UTC Nov 25 |
+| Surface winds | 12° average direction error and 0.5 m/s low across 155 airport readings in the first five hours |
+| Numerical convergence | Fitted release changes under 10% with a new seed, four times the particles, or half the time step |
+| Unsourced constants | Halving and doubling each moved arrival times by 15 minutes or less |
+
+The first eight are automated tests in [`test/core.test.js`](test/core.test.js) and run on every push. The rest were measured on the Nov 25 weather.
 
 ## The event, from public sources
 
@@ -31,24 +133,47 @@ A particle model of where lead dust went after the U.S. Army's controlled detona
 | Air measurements | Four EPA real-time lead monitors, 5 to 43 km southwest. EPA reported no detection of airborne lead | EPA data viewer and statements |
 | Soil cleanup level | 200 parts per million at residential properties | Army statement |
 
-## What it does
+## Data sources
 
-- Fetches hourly weather from [Open-Meteo](https://open-meteo.com/) (NOAA's 3 km HRRR model for the first day, then GFS): winds at eight heights, boundary layer height, precipitation, solar radiation and cloud cover on a 154-point grid at 0.6° (36.5 to 42.5°N, 96.5 to 88.7°W), and a wide 168-point grid at 1.5° (27 to 43.5°N, 98.5 to 79°W) for dust that travels further. Fetched on every load and every 30 minutes, through a shared copy at most 10 minutes old.
-- Moves 48,000 particles in ten size bins (0.2 to 80 µm) in 50 second steps, in a background worker. A quick 12,000 particle pass shows first.
-- Settling: Stokes with slip and drag corrections, using air properties from the forecast temperature and pressure. Turbulent spread: stability class from EPA's solar radiation method by day and Turner's key at night, intensities times the 10 m wind, crosswind growth matched to Draxler (1976). Dry deposition: a resistance model. Wet deposition: rain washout.
-- Treats "fine" dust the way air monitors do, by aerodynamic diameter. Lead oxide is 9.5 times denser than water, so PM10 means about 3 µm physical and under, and PM2.5 about 0.8 µm. PM2.5-size lead stays airborne for days. Coarse dust is on the ground within hours.
-- Draws all 43 of EPA's air sampling stations from its public location layer. Only four publish readings. The rest are marked as having none.
-- Shows EPA's real-time lead readings as published: a table and chart for each of the four monitors, and the reading nearest the displayed time beside each monitor on the map.
-- Reads EPA's four real-time lead monitors along the plume path, live, and turns them into a limit on the release: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors.
-- The detonation point is not public and the plant is several km across. The page repeats the limit with the point moved 3 km in four directions and uses the largest. On Nov 25 two of those plumes passed beside the monitors entirely, so the monitors could not rule out the Army planning case, and the page shows that high case by default.
-- Can instead scale the release to the Army's pre-detonation map (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²), which implies several hundred kilograms. That map is a planning forecast and is the high case.
-- Checks the forecast as time passes: the model's 10 m wind against National Weather Service observations at eight airports.
-- Pick any of 61 towns, from Iowa to the Gulf coast, to see when the modeled dust arrives, the peak in the air and what is left on the ground.
-- Shows the Army's newest deposition maps next to the model, read from the plant's public DVIDS feed.
+| Data | Source | Refresh |
+|---|---|---|
+| Forecast weather | [Open-Meteo](https://open-meteo.com/) (NOAA HRRR and GFS), CC BY 4.0 | Every load and every 30 minutes |
+| Lead in air | [EPA Region 7 data viewer](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6), four real-time monitors | Every load and every 30 minutes |
+| Sampling station positions | EPA Region 7, same viewer | Every load |
+| Official deposition maps | U.S. Army, through the plant's [DVIDS feed](https://www.dvidshub.net/unit/IAAAP) | Every load and every 30 minutes |
+| Observed surface wind | U.S. National Weather Service, api.weather.gov | Every load and every 30 minutes |
+| Basemap | © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors | Tiles on demand |
 
-## Run it
+## Limits
 
-There is no build step and no dependency to install.
+**What is unknown**
+
+- How much lead left the site. The three bounds above span roughly 5 to 780 kg.
+- Where exactly the magazines were. The model's point is inferred and could be off by a few km.
+- Whether EPA's monitors have PM10 inlets. The monitor limit assumes they do.
+- The particle sizes and the height of the first dust cloud. The defaults (30 µm median, 300 m) are the pair that best reproduces both Army contours (26 and 212 sq mi against 29 and 186).
+
+**What the monitors cannot tell you**
+
+- Four monitors near the ground only see fine dust that passes over them. Coarse dust that fell near the site, or a plume that passed overhead or to one side, would not register. On Nov 25 a 3 km shift in the detonation point was enough for the modeled plume to miss all four.
+
+**What the model leaves out**
+
+- Forecast uncertainty. One forecast is used, with no ensemble, so the far end of the track (a day or more out) is the least certain. Hours after the fetch time are forecast and will shift.
+- Fine detail. The main weather grid is about 50 by 65 km and the wide one about 150 km. Terrain, river valleys, fronts and local wind shifts are smoothed.
+- Vertical air motion, resuspension of settled dust, and the blast and buoyant rise in the first minutes.
+- Particle shape. Lead oxide is treated as solid spheres. Fresh fume forms loose aggregates that fall more slowly, and lead stuck to sand or soil travels with those larger grains.
+- Snow. Precipitation washes dust out at one rate fitted for rain and for particles under 2.8 µm.
+- Other possible emissions (hydrochloric acid, organic combustion products).
+- Hot spots. Town readouts are averages over a 20 km radius.
+
+**Running limits**
+
+- Weather comes through a small function that holds Open-Meteo's answer for 10 minutes so visitors share one fetch. When that fails (Open-Meteo often limits Vercel's shared addresses) the browser asks Open-Meteo directly, which allows about one load a minute and eight an hour per visitor. The page retries on its own.
+
+## Run it, test it, deploy it
+
+There is no build step and nothing to install.
 
 ```bash
 git clone https://github.com/mil-orb/iowa-lead-azide-dispersal
@@ -58,29 +183,35 @@ git clone https://github.com/mil-orb/iowa-lead-azide-dispersal
 python -m http.server 8765 --directory iowa-lead-azide-dispersal
 ```
 
-Open http://localhost:8765. The model and the map work from any static server. The two functions in `api/` (the Army map feed and the shared weather copy) only run on Vercel. Locally the Army panel shows its fallback links and weather comes straight from Open-Meteo.
+Open http://localhost:8765. The model and map work from any static server. The two functions in `api/` only run on Vercel, so locally the Army panel shows its fallback links and weather comes straight from Open-Meteo.
 
-Tests (Node 20 or newer, no packages). They cover mass conservation, settling speeds, air properties, the EPA stability tables, the logarithmic wind profile, advection at the wind speed, vertical mixing to an even profile, decay of airborne mass against the analytic rate, and crosswind spread against Draxler's curve:
+Run the tests (Node 20 or newer, no packages):
 
 ```bash
 node --test test/core.test.js
 ```
 
-Deploy your own copy with `vercel deploy --prod`.
+Deploy your own copy:
 
-## Limits
+```bash
+vercel deploy --prod
+```
 
-- Nobody has published how much lead left the site. The monitor limit only constrains fine dust (10 µm and under, an assumed inlet size) that passed four points near the ground. Coarse dust that fell near the site, or a plume that passed overhead or to one side, would not show up, so more could have left than the limit says.
-- The cloud top (300 m), the particle sizes (30 µm median) and the detonation point are assumptions. The first two were chosen because they come closest to reproducing both Army contours (28 and 203 sq mi against 29 and 186).
-- Stability comes from a class scheme, with no heat-flux data. Nov 25 was overcast (neutral), where that matters least.
-- Hours after the fetch time are forecast and will shift. One forecast is used, with no ensemble, so the far end of the track (a day or more out) is the least certain.
-- Vertical air motion is ignored, and snow is washed out at the rate fitted for rain.
-- The main weather grid is about 50 by 65 km and the wide one about 150 km. Terrain, river valleys, fronts and local wind shifts are smoothed.
-- Lead oxide is treated as solid spheres. Fresh fume forms loose aggregates that fall more slowly, and lead stuck to sand or soil travels with those larger grains. Neither is modeled.
-- No resuspension of settled dust, no blast or buoyancy model for the first minutes, and none of the other possible emissions (hydrochloric acid, organic combustion products).
-- Town readouts are averages over a 20 km radius and will miss hot spots.
-- Weather comes through a small function that holds Open-Meteo's answer for 10 minutes, so all visitors share one fetch. When that fails (Open-Meteo often limits Vercel's shared addresses) the browser asks Open-Meteo directly, which allows about one load a minute and eight an hour per visitor. The page retries on its own.
-- Do not use these numbers for health decisions.
+## Repository layout
+
+| Path | What it is |
+|---|---|
+| [`index.html`](index.html) | The whole app: page, styles, the model (`<script id="core">`, no DOM access) and the interface |
+| [`api/army-maps.js`](api/army-maps.js) | Reads the plant's DVIDS feed and returns the newest Army map images |
+| [`api/weather.js`](api/weather.js) | Forwards the page's Open-Meteo request so the edge can share one copy for 10 minutes |
+| [`test/core.test.js`](test/core.test.js) | Offline tests of the model on made-up weather |
+| [`AGENTS.md`](AGENTS.md) | Rules and a code map for coding assistants |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed in each version, including each audit |
+| [`CITATION.cff`](CITATION.cff) | How to cite this model |
+
+## Contributing
+
+Corrections to the physics and comparisons with measured data are the most useful help. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Report security problems privately through [SECURITY.md](SECURITY.md).
 
 ## References
 
@@ -120,8 +251,8 @@ Where each formula and constant in the model comes from. Entries marked † were
 
 These are this project's own choices: the 150 s vertical time scale and the 0.5 m²/s mixing rate above the boundary layer, the 0.3 factor on horizontal turbulence above the boundary layer (halving and doubling each of these moved arrival times by 15 minutes or less on the Nov 25 weather), the 30 m deposition layer, the 0.1 m surface roughness, the 1.5 km and 50 m monitor comparison volume, the 3 km detonation-point shifts, and the default cloud top and particle sizes.
 
-## Credits
+## Credits and license
 
-Weather: Open-Meteo (NOAA HRRR and GFS). Basemap: © OpenStreetMap contributors. Map library: Leaflet. Official maps: U.S. Army via DVIDS.
+Weather by [Open-Meteo.com](https://open-meteo.com/) (NOAA HRRR and GFS). Basemap © OpenStreetMap contributors. Map library: Leaflet. Air readings: U.S. EPA. Official maps: U.S. Army through DVIDS. Surface observations: U.S. National Weather Service.
 
-MIT license. See [LICENSE](LICENSE).
+[MIT license](LICENSE). To cite the model, see [CITATION.cff](CITATION.cff).
