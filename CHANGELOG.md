@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 (2026-11-25)
+
+- New detonation point: 40.8102°N, 91.2573°W, in H-Yard. The Army's sampling plan names H-Yard, an Army map shows where it is, and Sentinel-2 images show new earthwork at one magazine there. The old point was 1.75 km away, along the wind direction.
+- The EPA monitor limit is now repeated for points 0.5 km away in four directions. The 3 km shifts and the extra candidate point are gone.
+- With the tighter location the monitors bound the release well below the Army planning case, so the default scenario is smaller.
+
 ## 2.1.0 (2026-11-25)
 
 - Added the OBODM detonation cloud rise formula (User's Guide Vol. II, Eqs. 2-7 and 2-8) with a hand-worked test. The assumptions panel shows what it gives for an open detonation and for 90% and 99% of the heat lost to the cover. The default cloud top is unchanged.

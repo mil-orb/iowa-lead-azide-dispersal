@@ -104,7 +104,7 @@ flowchart LR
 
 **How much lead.** Nobody has published the amount released, so the model bounds it three ways and shows all three:
 
-1. **EPA monitors.** The dose the monitors recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors. This is a limit, and it is repeated with the detonation point moved 3 km in four directions, and to one more candidate point for the magazine taken from another public simulator, because that point is not public.
+1. **EPA monitors.** The dose the monitors recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors. This is a limit, and it is repeated with the detonation point moved 0.5 km in four directions, because the point is inferred and which magazines in the yard were used is not public.
 2. **Army planning map.** The release at which modeled deposition covers the same areas as the map's two contours (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²). This is the high case and the default.
 3. **1977 reference.** The 25% airborne fraction from an unmitigated detonation the Army cited.
 
@@ -138,11 +138,11 @@ The first eight are automated tests in [`test/core.test.js`](test/core.test.js) 
 | Method | Two earth-covered magazines detonated at once, in place, with donor explosives | Army Environmental Assessment |
 | Mitigation | Sand-filled barriers about two stories high, a water wall of more than 100,000 gallons, foam, gel blocks, misting, blast vented south and southwest | Army statements and Environmental Assessment |
 | Share of lead released | Not published. A 1977 detonation of about 7,000 lb with no mitigation put about 25% in the air | Army briefing |
-| Location | Not published. Near the headwaters of Long Creek in the western half of the plant. The model uses 40.802°N, 91.275°W, where the line of EPA monitors crosses the creek | Environmental Assessment, EPA monitor positions, OpenStreetMap |
+| Location | Coordinates not published. The Army's sampling plan calls the site H-Yard, the magazine group about 2 km south of Middletown. The model uses 40.8102°N, 91.2573°W, where Sentinel-2 images show new earthwork at one magazine between Oct 6 and Nov 15, 2026. EPA's four monitors lie on a line that passes within about 100 m of it | Army Sampling and Analysis Plan (Sept 2026), yard map in the Army's Mathes Lake Preliminary Assessment (MWH, Jan 2016), Sentinel-2 L2A imagery, EPA monitor positions |
 | Go/no-go weather | Daylight, no precipitation, surface wind under 15 mph, no temperature inversion | Environmental Assessment |
 | Observed at Burlington airport, 8:53 to 9:53 AM | Wind from 050° at 8 to 13 knots, clear below 12,000 ft, 1 °C | National Weather Service |
 | Planning model | DTRA (through IMAAC). Deposition areas of 29 and 186 sq mi at 100 and 5 µg/ft², which the map legend calls EPA's limits for lead dust on window sills and floors | Army deposition map, 8:00 AM Nov 25 |
-| Air measurements | Four EPA real-time lead monitors, 5 to 43 km southwest. EPA reported no detection of airborne lead | EPA data viewer and statements |
+| Air measurements | Four EPA real-time lead monitors, 7 to 45 km southwest. EPA reported no detection of airborne lead | EPA data viewer and statements |
 | Soil cleanup level | 200 parts per million at residential properties | Army statement |
 
 ## Data sources
@@ -161,13 +161,13 @@ The first eight are automated tests in [`test/core.test.js`](test/core.test.js) 
 **What is unknown**
 
 - How much lead left the site. The three bounds above span roughly 5 to 780 kg.
-- Where exactly the magazines were. The model's point is inferred and could be off by a few km.
+- Which two magazines in H-Yard were used. The model's point is inferred from documents and satellite images. It is good to a few hundred metres, and it is not a published location.
 - Whether EPA's monitors have PM10 inlets. The monitor limit assumes they do.
 - The particle sizes and the height of the first dust cloud. The defaults (30 µm median, 300 m) are the pair that best reproduces both Army contours (26 and 212 sq mi against 29 and 186).
 
 **What the monitors cannot tell you**
 
-- Four monitors near the ground only see fine dust that passes over them. Coarse dust that fell near the site, or a plume that passed overhead or to one side, would not register. On Nov 25 a 3 km shift in the detonation point was enough for the modeled plume to miss all four.
+- Four monitors near the ground only see fine dust that passes over them. Coarse dust that fell near the site, or a plume that passed overhead or to one side, would not register. In a test run for Nov 25, a cloud heading 15° further south than forecast left the four monitors about a twentieth of the dose.
 
 **What the model leaves out**
 
@@ -261,7 +261,7 @@ Where each formula and constant in the model comes from. Entries marked † were
 
 **Not from a source**
 
-These are this project's own choices: the 150 s vertical time scale and the 0.5 m²/s mixing rate above the boundary layer, the 0.3 factor on horizontal turbulence above the boundary layer (halving and doubling each of these moved arrival times by 15 minutes or less on the Nov 25 weather), the 30 m deposition layer, the 0.1 m surface roughness, the 1.5 km and 50 m monitor comparison volume, the 3 km detonation-point shifts, and the default cloud top and particle sizes.
+These are this project's own choices: the 150 s vertical time scale and the 0.5 m²/s mixing rate above the boundary layer, the 0.3 factor on horizontal turbulence above the boundary layer (halving and doubling each of these moved arrival times by 15 minutes or less on the Nov 25 weather), the 30 m deposition layer, the 0.1 m surface roughness, the 1.5 km and 50 m monitor comparison volume, the 0.5 km detonation-point shifts, and the default cloud top and particle sizes.
 
 ## Credits and license
 
