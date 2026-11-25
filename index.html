@@ -256,7 +256,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
         <summary>Change the assumptions</summary>
         <div class="ctl">
           <label class="r" for="cMass">Lead released to the air <span class="v" id="vMass"></span>
-            <input id="cMass" type="range" min="-3" max="3.5" step="0.01" value="0"></label>
+            <input id="cMass" type="range" min="-3" max="3.4955" step="0.0005" value="0"></label>
           <label class="r" for="cTop">Top of the initial dust cloud <span class="v" id="vTop"></span>
             <input id="cTop" type="range" min="50" max="1500" step="25" value="300"></label>
           <label class="r" for="cMmd">Mass median particle diameter <span class="v" id="vMmd"></span>
@@ -273,6 +273,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   <details class="panel notes">
     <summary>How the model works and where it is weak</summary>
     <ul>
+      <li><b>The event, as published.</b> At 9:00 AM CST on November 25, 2026 the Army detonated two earth-covered magazines at once, holding 68 drums of degraded lead azide with a stated net explosive weight of more than 9,700 lb. Lead azide is 71.1% lead by mass, so the stockpile held about 3,130 kg of lead. The magazines were surrounded by sand-filled barriers about two stories high, a water wall of more than 100,000 gallons, foam and gel blocks, with the blast vented toward the south and southwest. The Army has not said how much lead escaped. It did cite a 1977 detonation of about 7,000 lb with no such measures, in which about 25% of the lead went into the air.</li>
+      <li><b>Chemistry.</b> Lead azide, Pb(N₃)₂, detonates to lead and nitrogen gas. The lead comes off as vapor and fine droplets that oxidize in air to lead oxide, which is what the Army's own modeling describes ("a small fraction will be fine lead oxide dust" in a cloud that is mostly nitrogen, sand, soil and water vapor). The model therefore tracks the mass of lead and moves it as lead oxide particles (9.5 g/cm³) by default. Lead oxide does not break down or evaporate in the air, so no chemistry is applied in flight. Two things the model leaves out would both make real particles settle differently: fresh fume clumps into loose aggregates that fall more slowly than solid spheres of the same size, and lead stuck to sand or soil grains travels with those much larger grains. A reviewer of the permit also named hydrochloric acid and organic combustion products as possible emissions. Those are not modeled.</li>
+      <li><b>Where it was.</b> The exact magazines are not published. The Army's Environmental Assessment places them near the headwaters of Long Creek in the western half of the plant, and EPA's four real-time monitors lie on one straight line. The model uses the point where that line crosses the creek, and treats it as uncertain by a few km.</li>
       <li><b>Weather.</b> Hourly Open-Meteo data. For the first day that is NOAA's 3 km HRRR model (checked by requesting it by name and comparing), then GFS. A main grid of 154 points at 0.6° covers 36.5 to 42.5°N and 96.5 to 88.7°W: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. A wide grid of 168 points at 1.5°, from 27 to 43.5°N and 98.5 to 79°W, carries fewer levels and is used once dust leaves the main grid. Between levels the wind is interpolated in the logarithm of height, as in a logarithmic wind profile, and below 10 m it follows the log law for 0.1 m roughness. Data is fetched on every load and every 30 minutes after, through a shared copy that is at most 10 minutes old, and the page shows the fetch time. If refreshing fails for 90 minutes the page hides the result.</li>
       <li><b>Particles.</b> 48,000 model particles in ten size bins (a quick 12,000 particle pass shows first) from 0.2 to 80 µm physical diameter, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top, with turbulent velocities drawn from the surrounding air, and move in 50 second steps with wind interpolated in space, height and time. Air monitors and the terms PM10 and PM2.5 use aerodynamic diameter, which is the physical diameter times the square root of the density relative to water. Lead oxide is 9.5 times denser than water, so PM10 means about 3 µm and under here, and PM2.5 about 0.8 µm and under.</li>
       <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction (Seinfeld and Pandis 2016) and a Schiller-Naumann drag correction for the larger sizes. Air viscosity (Sutherland's law), density and mean free path are computed from the forecast temperature and pressure at the site. For lead oxide that gives about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm, so PM2.5-size lead stays airborne for days while 10 µm particles are gone within about a day.</li>
@@ -280,10 +283,10 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (Slinn 1982, as given by Seinfeld and Pandis 2016: aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
       <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second (Baklanov and Sørensen 2001). That rate was derived for particles under 2.8 µm and is applied here to every size, so washout of coarse dust is understated.</li>
       <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
-      <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours.</li>
+      <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours. The Army map's two contour levels are the ones its legend calls EPA's limits for lead dust on window sills (100 µg/ft²) and floors (5 µg/ft²). For scale, mixed through the top 2 inches of soil (the depth the Army's sampling plan uses), 100 µg/ft² adds about 0.02 parts per million of lead. The Army's stated soil cleanup level is 200 parts per million.</li>
       <li><b>Checks.</b> Automated tests confirm that mass is conserved, that settling speeds match hand calculations, that a dust layer mixes to an even profile and stays even, that airborne mass decays at the rate the settling and deposition speeds imply, and that crosswind spread follows Draxler's curve within 20%. On the Nov 25 weather the modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
       <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released PM10-size dust is airborne within 20 km of it, at any height. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
-      <li><b>Wind check.</b> The page compares the model's 10 m wind with National Weather Service observations at eight airports for the hours already past. A one-off check against the Davenport weather balloon at 6:00 AM CST on Nov 25 found the model within 8° in direction and about 2 m/s in speed at 925 and 850 hPa.</li>
+      <li><b>Wind check.</b> Burlington airport reported clear sky below 12,000 ft and a northeast wind of 8 to 13 knots around the detonation, while the weather model reports full cloud cover, which must then be high cloud. The stability class uses solar radiation, so thin high cloud is handled as it should be. The page compares the model's 10 m wind with National Weather Service observations at eight airports for the hours already past. A one-off check against the Davenport weather balloon at 6:00 AM CST on Nov 25 found the model within 8° in direction and about 2 m/s in speed at 925 and 850 hPa.</li>
       <li><b>Sensitivity.</b> Halving and doubling the constants that have no published source (vertical mixing time, turbulence above the boundary layer, horizontal memory time) moved arrival times by 15 minutes or less and the monitor limit by about 15% on the Nov 25 weather.</li>
       <li><b>Snow and rain.</b> Precipitation washes dust out using one rate fitted for rain and for particles under 2.8 µm. Snow scavenges differently and the model does not treat it separately.</li>
       <li><b>Weak points.</b> Hours after the fetch time are forecast. The main weather grid is about 50 by 65 km and the wide one about 150 km, so terrain, river valleys, fronts and local wind shifts are smoothed. One forecast is used, with no ensemble, so the far end of the track is the least certain. Vertical air motion is ignored. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
@@ -314,7 +317,15 @@ const LEVELS=[2,5,10,20,40,80,120,180,300,450,600,800,1000,1300,1600,2000];
 const Z0=0.1; // m, surface roughness for farmland. Used for the wind profile below 10 m and for friction velocity.
 const PLEV=[950,925,900,850];
 const NL=LEVELS.length, NP=GRID.nx*GRID.ny;
-const SRC={lat:40.805,lon:-91.255}; // assumed detonation point. The real one is not public. The EPA monitor line points back to within 1 km of this.
+// Detonation point. Not published. Inferred from two public statements: the Army's Environmental Assessment puts the two
+// magazines near the headwaters of Long Creek in the western half of the plant, and EPA's four real-time monitors lie on a
+// straight line. This is where that line crosses the creek. Treat it as good to a few km.
+const SRC={lat:40.802,lon:-91.275};
+// Lead in the stockpile: the Army gave more than 9,700 lb net explosive weight in 68 drums. Lead azide, Pb(N3)2, is
+// 207.2 / 291.24 = 71.1% lead by mass, so 4,400 kg of it holds about 3,130 kg of lead.
+const LEAD_KG=3130;
+// The Army cited a 1977 detonation of about 7,000 lb of lead azide with no mitigation, in which about 25% of the lead went into the air.
+const REF_UNMITIGATED=0.25;
 const SRC_SHIFTS=[[0.027,0],[-0.027,0],[0,0.0356],[0,-0.0356]]; // 3 km north, south, east, west
 const T0=Date.UTC(2026,10,25,15,0,0); // 9:00 AM CST
 const H_START='2026-11-25T14:00', H_END='2026-11-27T16:00';
@@ -555,7 +566,7 @@ function createSim(met,prm){
     state:()=>({x,y,z,m,alive}),
     totals:()=>({dry,wet,exited,air:m.reduce((s,v)=>s+v,0)})};
 }
-g.Core={SRC_SHIFTS,REACH,OUTER,OLATMAX,OLONMAX,OGRID,Z0,pointUrl,airProps,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
+g.Core={LEAD_KG,REF_UNMITIGATED,SRC_SHIFTS,REACH,OUTER,OLATMAX,OLONMAX,OGRID,Z0,pointUrl,airProps,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 
@@ -674,7 +685,7 @@ function draw(){
 /* ---- model run ---- */
 function params(){ return {top:+$('cTop').value,mmd:+$('cMmd').value,rho:+$('cRho').value,mult:+$('cMult').value,hours:48,nPer:1200,show:1200,seed:7,dt:50,air:airPt,monitors:epa?epa.stations.map(q=>({lat:q.lat,lon:q.lon})):[]}; }
 function showCtl(){
-  $('vMass').textContent=sig(M)+' kg ('+sig(M/3200*100)+'% of about 3,200 kg)';
+  $('vMass').textContent=sig(M)+' kg ('+sig(M/C.LEAD_KG*100)+'% of the roughly '+C.LEAD_KG.toLocaleString('en-US')+' kg in the stockpile)';
   $('vTop').textContent=$('cTop').value+' m'; $('vMmd').textContent=$('cMmd').value+' µm'; $('vMult').textContent='×'+(+$('cMult').value).toFixed(1);
 }
 function msg(t){ $('mapmsg').hidden=!t; $('mapmsg').textContent=t||''; }
@@ -708,14 +719,14 @@ function monLimit(r){
   let dm=0,dd=0,s2=0;
   epa.stations.forEach((st,k)=>{ dm+=st.dose; s2+=st.sdt2; const fEnd=Math.min(r.nF-1,Math.floor((st.tEnd-C.T0)/1000/r.FRAME)); for(let f=1;f<=fEnd;f++) dd+=r.monAvg[k][f]*r.FRAME/60; });
   const sd=epa.preStd*Math.sqrt(s2), top=Math.max(0,dm)+2*sd;
-  return {dm,sd,best:dd>0?Math.max(0,dm)/dd:null,up:dd>0?Math.min(3200,Math.max(1e-4,top/dd)):3200};
+  return {dm,sd,best:dd>0?Math.max(0,dm)/dd:null,up:dd>0?Math.min(C.LEAD_KG,Math.max(1e-4,top/dd)):C.LEAD_KG};
 }
 // ensUps: limits for detonation points 3 km north, south, east and west of the assumed one.
 let ensUps=null, ensNA=false;
 function finishFits(){
   if(!fits)return; fits.epa=null; fits.epaWide=null;
   // Until the detonation-point check has run, show the high case, so the page never understates.
-  if(fits.epaC){ const cap=isFinite(fits.army)?fits.army:3200; fits.epa=cap; if(ensUps&&ensUps.length){ fits.epaWide=Math.max.apply(null,ensUps.concat([fits.epaC])); fits.epa=Math.min(fits.epaWide,cap); } }
+  if(fits.epaC){ const cap=isFinite(fits.army)?fits.army:C.LEAD_KG; fits.epa=cap; if(ensUps&&ensUps.length){ fits.epaWide=Math.max.apply(null,ensUps.concat([fits.epaC])); fits.epa=Math.min(fits.epaWide,cap); } }
 }
 async function run(){
   if(!met)return; const my=++runId; ensUps=null; msg('Running particles…'); $('refine').hidden=true;
@@ -734,7 +745,7 @@ function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.
 function applyBasis(){
   if(!fits)return;
   if(basis==='epa'&&!fits.epa) basis='army';
-  if(basis==='epa') M=fits.epa; else if(basis==='army'&&isFinite(fits.army)&&fits.army>0) M=Math.min(3200,Math.max(1e-4,fits.army));
+  if(basis==='epa') M=fits.epa; else if(basis==='army'&&isFinite(fits.army)&&fits.army>0) M=Math.min(C.LEAD_KG,Math.max(1e-4,fits.army));
   $('cMass').value=Math.log10(M); document.querySelectorAll('input[name=basis]').forEach(r=>{ r.checked=r.value===basis; if(r.value==='epa')r.disabled=!fits.epa; });
   setScale(); showCtl();
 }
@@ -769,14 +780,14 @@ function fitCard(){
   const clear=fits.epaC&&fits.dose>2*fits.doseSd;
   let mon='';
   if(fits.epaC){ mon=(clear?'The EPA monitors recorded lead above their background. ':'The EPA monitors show no clear lead signal above their background. ')+'For a detonation at the assumed point, that caps the release at about '+ec+' ('+ef+' of it PM10-size dust, the part the monitors can sample). ';
-    if(fits.epaWide) mon+='The detonation point is not public. If it was up to 3 km away, '+(fits.epaWide>=3199?'the modeled plume passes beside the monitors and they set no limit at all':'the cap rises to about '+sig(fits.epaWide)+' kg')+(fits.epaWide>=fits.army?'. So the monitors cannot rule out the Army planning case, and this page shows that high case.':'.');
+    if(fits.epaWide) mon+='The detonation point is not public. If it was up to 3 km away, '+(fits.epaWide>=C.LEAD_KG-1?'the modeled plume passes beside the monitors and they set no limit at all':'the cap rises to about '+sig(fits.epaWide)+' kg')+(fits.epaWide>=fits.army?'. So the monitors cannot rule out the Army planning case, and this page shows that high case.':'.');
     else mon+=ensNA?'This browser cannot run the check on the detonation point, so the page shows the Army high case.':'Checking how much the unknown detonation point changes that. Until then the page shows the Army high case.'; }
   $('fitHead').textContent=basis==='epa'?mon+' Release shown: '+e+'. The Army planning map implies about '+army+'.'
     :basis==='army'?'Scaled to the Army pre-detonation map, the release is about '+army+' of lead. '+mon
     :'Custom release: '+sig(M)+' kg of lead. '+mon+(fits.epaC?' The Army planning map assumed about '+army+'.':'');
   const aHi=C.areaAbove(curve,C.ARMY.hi.level/C.UGFT2/M)/C.MI2, aLo=C.areaAbove(curve,C.ARMY.lo.level/C.UGFT2/M)/C.MI2, rows=[];
-  if(fits.epaC) rows.push(['Monitor limit, assumed detonation point',ec],['Monitor limit, point up to 3 km off',fits.epaWide?(fits.epaWide>=3199?'no limit':sig(fits.epaWide)+' kg'):(ensNA?'not checked':'checking…')],['Best match, assumed point',fits.epaBest>0?sig(fits.epaBest)+' kg':'none above background'],['Net measured dose, all monitors',sig(Math.max(0,fits.dose))+' ± '+sig(fits.doseSd)+' µg·min/m³']);
-  rows.push(['Release that matches the Army map',army],['Area above 100 µg/ft² at this release',aHi.toFixed(0)+' sq mi (Army map: 29)'],['Area above 5 µg/ft² at this release',aLo.toFixed(0)+' sq mi (Army map: 186)'],['Highest modeled deposit',sig(pkLoad*M*C.UGFT2)+' µg/ft²']);
+  if(fits.epaC) rows.push(['Monitor limit, assumed detonation point',ec],['Monitor limit, point up to 3 km off',fits.epaWide?(fits.epaWide>=C.LEAD_KG-1?'no limit':sig(fits.epaWide)+' kg'):(ensNA?'not checked':'checking…')],['Best match, assumed point',fits.epaBest>0?sig(fits.epaBest)+' kg':'none above background'],['Net measured dose, all monitors',sig(Math.max(0,fits.dose))+' ± '+sig(fits.doseSd)+' µg·min/m³']);
+  rows.push(['Release that matches the Army map',army+' ('+sig(fits.army/C.LEAD_KG*100)+'% of the stockpile)'],['If 25% went airborne, as in the 1977 test the Army cited',sig(C.LEAD_KG*C.REF_UNMITIGATED)+' kg'],['Area above 100 µg/ft² at this release',aHi.toFixed(0)+' sq mi (Army map: 29)'],['Area above 5 µg/ft² at this release',aLo.toFixed(0)+' sq mi (Army map: 186)'],['Highest modeled deposit',sig(pkLoad*M*C.UGFT2)+' µg/ft²']);
   if(epa) rows.push(['EPA readings used',nRead+' from '+epa.stations.length+' monitors, latest '+fmtCST(epa.tEnd,true)]);
   kvFill('fitKv',rows);
   $('fitNote').textContent=(epa?'Model peak is a 15 minute average of PM10-size particles (10 µm aerodynamic diameter and under, about 3 µm for lead oxide) near the ground within 1.5 km of the monitor. The limit is the measured dose above each monitor\u2019s pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram. It assumes the monitors have PM10 inlets, which EPA has not confirmed on its public pages. The four monitors lie on a line that points back to within 1 km of the assumed detonation point, but that is an inference. The wider limit repeats the calculation with the detonation point moved 3 km north, south, east and west and takes the largest. Four ground monitors can also miss coarse dust that falls near the site and a plume that passes overhead, so even the wider limit is not a guarantee. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map, which is a forecast, and it is the high case.';

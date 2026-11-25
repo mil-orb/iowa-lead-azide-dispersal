@@ -13,6 +13,24 @@ A particle model of where lead dust went after the U.S. Army's controlled detona
 
 **It is a model estimate. It measures nothing.** For measured lead levels use EPA's [data dashboard](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6) and [response site](https://response.epa.gov/site/site_profile.aspx?site_id=17211). For official maps and instructions use the [Army's notification page](https://www.army.mil/asc#org-iowa-army-ammunition-plant). This project has no connection to the Army, EPA or any agency.
 
+## The event, from public sources
+
+| Parameter | Value used | Source |
+|---|---|---|
+| Time | 9:00 AM CST (15:00 UTC), November 25, 2026 | Army advisory and news reports |
+| Material | 68 drums of degraded lead azide, more than 9,700 lb net explosive weight (the Environmental Assessment says 9,500 lb) | Army statements |
+| Lead in the stockpile | About 3,130 kg. Lead azide, Pb(N₃)₂, is 207.2 / 291.24 = 71.1% lead | Atomic weights |
+| What the lead becomes | Fine lead oxide dust, in a cloud mostly of nitrogen, sand, soil and water vapor | Army modeling, as reported |
+| Method | Two earth-covered magazines detonated at once, in place, with donor explosives | Army Environmental Assessment |
+| Mitigation | Sand-filled barriers about two stories high, a water wall of more than 100,000 gallons, foam, gel blocks, misting, blast vented south and southwest | Army statements and Environmental Assessment |
+| Share of lead released | Not published. A 1977 detonation of about 7,000 lb with no mitigation put about 25% in the air | Army briefing |
+| Location | Not published. Near the headwaters of Long Creek in the western half of the plant. The model uses 40.802°N, 91.275°W, where the line of EPA monitors crosses the creek | Environmental Assessment, EPA monitor positions, OpenStreetMap |
+| Go/no-go weather | Daylight, no precipitation, surface wind under 15 mph, no temperature inversion | Environmental Assessment |
+| Observed at Burlington airport, 8:53 to 9:53 AM | Wind from 050° at 8 to 13 knots, clear below 12,000 ft, 1 °C | National Weather Service |
+| Planning model | DTRA (through IMAAC). Deposition areas of 29 and 186 sq mi at 100 and 5 µg/ft², which the map legend calls EPA's limits for lead dust on window sills and floors | Army deposition map, 8:00 AM Nov 25 |
+| Air measurements | Four EPA real-time lead monitors, 5 to 43 km southwest. EPA reported no detection of airborne lead | EPA data viewer and statements |
+| Soil cleanup level | 200 parts per million at residential properties | Army statement |
+
 ## What it does
 
 - Fetches hourly weather from [Open-Meteo](https://open-meteo.com/) (NOAA's 3 km HRRR model for the first day, then GFS): winds at eight heights, boundary layer height, precipitation, solar radiation and cloud cover on a 154-point grid at 0.6° (36.5 to 42.5°N, 96.5 to 88.7°W), and a wide 168-point grid at 1.5° (27 to 43.5°N, 98.5 to 79°W) for dust that travels further. Fetched on every load and every 30 minutes, through a shared copy at most 10 minutes old.
@@ -56,7 +74,8 @@ Deploy your own copy with `vercel deploy --prod`.
 - Hours after the fetch time are forecast and will shift. One forecast is used, with no ensemble, so the far end of the track (a day or more out) is the least certain.
 - Vertical air motion is ignored, and snow is washed out at the rate fitted for rain.
 - The main weather grid is about 50 by 65 km and the wide one about 150 km. Terrain, river valleys, fronts and local wind shifts are smoothed.
-- No chemistry, no resuspension of settled dust, no blast or buoyancy model for the first minutes.
+- Lead oxide is treated as solid spheres. Fresh fume forms loose aggregates that fall more slowly, and lead stuck to sand or soil travels with those larger grains. Neither is modeled.
+- No resuspension of settled dust, no blast or buoyancy model for the first minutes, and none of the other possible emissions (hydrochloric acid, organic combustion products).
 - Town readouts are averages over a 20 km radius and will miss hot spots.
 - Weather comes through a small function that holds Open-Meteo's answer for 10 minutes, so all visitors share one fetch. When that fails (Open-Meteo often limits Vercel's shared addresses) the browser asks Open-Meteo directly, which allows about one load a minute and eight an hour per visitor. The page retries on its own.
 - Do not use these numbers for health decisions.
@@ -91,7 +110,9 @@ Where each formula and constant in the model comes from. Entries marked † were
 - One-off check of winds aloft: Davenport, Iowa radiosonde at 12 UTC on Nov 25, 2026, from the Iowa Environmental Mesonet archive. Observed 925 hPa wind from 90° at 7.7 m/s against the model's 82° at 8.0 m/s; 850 hPa from 95° at 5.7 m/s against 92° at 7.9 m/s.
 - Air monitor readings: U.S. EPA Region 7, Iowa Army Ammunition Plant Response Data Viewer. https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6
 - Planning-case deposition areas and dispersion time markers: U.S. Army, Deposition Maps as of 8:00 AM (CST), November 25, 2026. https://www.army.mil/article/297086
-- Lead content of lead azide, Pb(N₃)₂: 207.2 / 291.2 = 71% by mass, from standard atomic weights.
+- Lead content of lead azide, Pb(N₃)₂: 207.2 / 291.24 = 71.1% by mass, from standard atomic weights.
+- Event facts: U.S. Army, Environmental Assessment for Lead Azide Risk Mitigation at the Iowa Army Ammunition Plant (IAAAP-EA-2026-01); Army public safety advisory of Nov 24, 2026 (https://www.army.mil/article/297039); the Army's Environmental Sampling and Analysis Plan in EPA's permit record (https://response.epa.gov/site/doc_list.aspx?site_id=17211); Army briefing statements as reported by KCCI, Valley News Live and PBS NewsHour on Nov 24 and 25, 2026.
+- Creek positions used to place the detonation point: OpenStreetMap contributors.
 
 **Not from a source**
 

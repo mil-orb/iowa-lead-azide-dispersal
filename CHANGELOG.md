@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0 (2026-11-25)
+
+Event parameters brought in line with what has been published.
+
+- Stockpile lead set from the Army's stated 9,700 lb net explosive weight: about 3,130 kg (was 3,200 kg).
+- Detonation point moved 1.7 km west to where the line of EPA monitors crosses Long Creek, following the Environmental Assessment's description of the site.
+- The 1977 unmitigated release fraction the Army cited (25%) is shown as a reference.
+- Method notes now cover the chemistry (lead azide to lead oxide), what is left out, and a table of event parameters with sources in the README.
+
 ## 1.4.0 (2026-11-25)
 
 Second audit, aimed at following suspended dust on forecast winds.
