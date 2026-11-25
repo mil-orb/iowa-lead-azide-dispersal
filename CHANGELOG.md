@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0 (2026-11-25)
+
+- All of EPA's listed air sampling stations are drawn on the map, read live from its location layer. Stations without published readings are marked as such.
+- The EPA card shows how old the newest reading is.
+
 ## 1.6.0 (2026-11-25)
 
 - EPA's monitor readings are shown directly: a summary, a table and a chart per monitor with the model for comparison, and the reading nearest the displayed time on the map.

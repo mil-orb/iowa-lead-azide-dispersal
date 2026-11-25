@@ -121,6 +121,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .basis label.chip:has(input:checked){background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:var(--accent)}
 .basis input{accent-color:var(--accent)}
 .dia{display:inline-block;width:7px;height:7px;background:var(--halo);border:1.5px solid var(--ink);transform:rotate(45deg);margin-right:7px;vertical-align:0}
+.dia.sm{width:5px;height:5px;border-color:var(--arrow)}
 .hbtns{display:flex;gap:8px;align-items:center}
 .gh{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:5px 11px;color:var(--ink);text-decoration:none;background:var(--panel)}
 .gh:hover{border-color:var(--accent)} .gh svg{width:16px;height:16px;fill:currentColor}
@@ -168,7 +169,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
             <label class="chip"><input id="lyP" type="checkbox" checked> Particles</label>
             <label class="chip"><input id="lyD" type="checkbox" checked> Deposition</label>
             <label class="chip"><input id="lyC" type="checkbox" checked> Army map levels</label>
-            <label class="chip"><input id="lyM" type="checkbox" checked> EPA monitors</label>
+            <label class="chip"><input id="lyM" type="checkbox" checked> EPA stations</label>
             <label class="chip"><input id="lyW" type="checkbox"> Wind at
               <select id="wlev" aria-label="Wind height"><option value="0">10 m</option><option value="1">80 m</option><option value="3">180 m</option><option value="5">450 m</option><option value="8">1000 m</option><option value="10">1600 m</option></select></label>
           </div>
@@ -178,7 +179,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
             <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
             <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
             <span>lead on the ground, µg/ft²</span>
-            <span><i class="dia"></i>EPA air monitor (location only)</span>
+            <span><i class="dia"></i>EPA monitor with live readings</span>
+            <span><i class="dia sm"></i>EPA station, no published readings</span>
             <span><i class="ln"></i>100 µg/ft²</span><span><i class="ln dash"></i>5 µg/ft²</span>
           </div>
         </div>
@@ -211,6 +213,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
           <thead><tr><th>Monitor</th><th>km from site</th><th>Readings</th><th>At zero</th><th>Highest, µg/m³</th><th>When</th></tr></thead>
           <tbody id="epaRows"></tbody>
         </table></div>
+        <p class="tiny" id="sitesNote" style="margin:8px 0 0"></p>
         <canvas id="monChart" aria-label="Measured lead in air at the selected EPA monitor, with the model for comparison"></canvas>
         <div class="tiny" id="monCap"></div>
         <p class="tiny" style="margin:8px 0 0">These are EPA's own real-time readings of lead in air, read live from its <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data viewer</a>. They are the only measurements on this page. Click a row or a diamond on the map to chart a monitor. On the map, the number beside each diamond is the reading nearest the time shown.</p>
@@ -677,6 +680,10 @@ function draw(){
         const pxx=kx*x+ox; if(pxx<0||pxx>W)continue; const pyy=Y(y); if(pyy<0||pyy>H)continue; ctx.fillRect(pxx-sz/2,pyy-sz/2,sz,sz); } }
     ctx.globalAlpha=1;
   }
+  if(sites&&$('lyM').checked){ ctx.font='10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    sites.forEach((q,k)=>{ if(q.live)return; const x=X(q.lon),y=Y(q.lat); if(x<0||y<0||x>W||y>H)return; const r=k===selSite?5:3.2;
+      ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();ctx.fillStyle=col.halo;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1;ctx.lineWidth=1.2;ctx.strokeStyle=col.arrow;ctx.stroke();
+      if(zm>=9.5||k===selSite){ ctx.lineWidth=3;ctx.strokeStyle=col.halo;ctx.strokeText(q.id,x+7,y);ctx.fillStyle=col.ink;ctx.fillText(q.id,x+7,y); } }); }
   if(epa&&$('lyM').checked){ ctx.font='600 10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
     epa.stations.forEach(st=>{ const x=X(st.lon),y=Y(st.lat); if(x<0||y<0||x>W||y>H)return;
       ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x+6,y);ctx.lineTo(x,y+6);ctx.lineTo(x-6,y);ctx.closePath();ctx.fillStyle=col.halo;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col.ink;ctx.stroke(); // hollow and neutral: the colour carries no reading
@@ -753,7 +760,8 @@ async function run(){
   else if(!ensNA){ ensNA=true; summarize(); }
   $('prog').style.width='0';
 }
-let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null, selMon=-1;
+let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null, selMon=-1, sites=null, selSite=-1;
+const SITES_URL='https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Air_Sampling_and_Monitoring_Location/FeatureServer/0/query?where=1%3D1&outFields=Station_ID,Instrument_Type&outSR=4326&f=json';
 function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.log10(Math.max(pk,1e-9)))); if(VMAX>500&&VMAX<5000)VMAX=500; VMIN=VMAX/1e4; const tk=v=>String(+v.toPrecision(2)); $('rt0').textContent=tk(VMIN); $('rt1').textContent=tk(VMAX/100); $('rt2').textContent=tk(VMAX); }
 function applyBasis(){
   if(!fits)return;
@@ -786,6 +794,22 @@ function summarize(){
 // Reading nearest a time, if one exists within 8 minutes.
 function readingAt(st,t){ const a=st.series; if(!a||!a.length)return null; let lo=0,hi=a.length-1; while(lo<hi){ const m=(lo+hi)>>1; if(a[m][0]<t)lo=m+1; else hi=m; }
   let b=lo; if(lo>0&&Math.abs(a[lo-1][0]-t)<Math.abs(a[lo][0]-t))b=lo-1; return Math.abs(a[b][0]-t)<=8*60000?a[b][1]:null; }
+// EPA's full list of sampling stations. Most have no published readings.
+async function loadSites(){
+  try{ const r=await fetch(SITES_URL,{cache:'no-store'}); if(!r.ok)throw 0; const j=await r.json(); if(!j||!Array.isArray(j.features))throw 0; const out=[];
+    j.features.forEach(ft=>{ const a=ft.attributes||{}, g=ft.geometry||{}, lat=+g.y, lon=+g.x, id=String(a.Station_ID||'').slice(0,12); if(!id||!isFinite(lat)||!isFinite(lon)||lat<C.GRID.lat0||lat>C.LATMAX||lon<C.GRID.lon0||lon>C.LONMAX)return;
+      out.push({id,key:id.replace(/[^A-Za-z0-9]/g,'').toUpperCase(),lat,lon,type:String(a.Instrument_Type||'').slice(0,80)}); });
+    sites=out.length?out:null;
+  }catch(e){ sites=null; }
+  markSites(); sitesNote(); draw();
+}
+function markSites(){ if(!sites)return; const live={}; if(epa) epa.stations.forEach(st=>{ live[String(st.id).replace(/[^A-Za-z0-9]/g,'').toUpperCase()]=1; }); sites.forEach(q=>{ q.live=!!live[q.key]; }); }
+function sitesNote(){
+  const el=$('sitesNote'); if(!el)return; if(!sites){ el.textContent=''; return; } markSites();
+  const n=sites.length, live=sites.filter(q=>q.live).length; let t='EPA lists '+n+' air sampling stations around the plant. '+live+' of them publish live readings. The other '+(n-live)+' are the small diamonds on the map. EPA has not published results for them: they use filter cassettes and canisters that go to a lab, and dust and gas meters whose data is not posted.';
+  if(selSite>=0&&sites[selSite]) t=sites[selSite].id+': '+(sites[selSite].type||'instrument type not listed')+'. '+distBear(sites[selSite].lat,sites[selSite].lon).km.toFixed(0)+' km from the site. No published readings. '+t;
+  el.textContent=t;
+}
 function epaCard(){
   const tb=$('epaRows'); tb.innerHTML='';
   if(!epa){ $('epaHead').textContent='EPA monitor readings could not be loaded right now.'; $('epaT').textContent=''; drawMon(); return; }
@@ -794,7 +818,8 @@ function epaCard(){
     [st.id,distBear(st.lat,st.lon).km.toFixed(0),String(st.nAll),String(st.zeros),st.pkAll>0?sig(st.pkAll):'0',st.pkAll>0?fmtCST(st.pkT,true):''].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);});
     const pick=()=>{ selMon=k; epaCard(); draw(); }; tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}}); tb.appendChild(tr); });
   if(selMon<0||selMon>=epa.stations.length){ selMon=pkS?epa.stations.indexOf(pkS):0; document.querySelectorAll('#epaRows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.m===selMon)); }
-  $('epaT').textContent='latest '+fmtCST(epa.tEnd,true);
+  { const age=Math.round((Date.now()-epa.tEnd)/60000); $('epaT').textContent='latest reading '+fmtCST(epa.tEnd,true)+(age>20?' ('+(age>=120?Math.round(age/60)+' h':age+' min')+' ago; EPA has posted nothing newer)':''); }
+  sitesNote();
   $('epaHead').textContent=n?'Since the detonation the four monitors have reported '+n+' readings. '+z+' of them were zero. The highest was '+sig(pk)+' µg/m³'+(pkS?' at '+pkS.id+' at '+fmtCST(pkS.pkT,true):'')+'. EPA lists 32 µg/m³ as its short-term screening level for lead in air.':'No readings since the detonation yet.';
   drawMon();
 }
@@ -979,7 +1004,7 @@ async function loadArmy(){
   }catch(e){ fail(); }
 }
 let refreshing=false, retryT=0;
-async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); epaCard(); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
+async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ loadSites(); const r=await Promise.all([loadMet(),loadEPA()]); epaCard(); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
 
 /* ---- town selection ---- */
 function durWords(min){ if(min<60)return Math.round(min)+' minutes'; const h=Math.floor(min/60), m=Math.round(min%60); return m?h+' h '+m+' min':h+(h===1?' hour':' hours'); }
@@ -1012,7 +1037,8 @@ $('townSel').addEventListener('change',e=>selectTown(+e.target.value));
 $('resetView').addEventListener('click',()=>selectTown(-1));
 $('goArr').addEventListener('click',()=>{ if(selRec<0||!sim||!recStats[selRec]||recStats[selRec].any<0)return; tMin=Math.min(2880,recStats[selRec].any*sim.FRAME/60); $('time').value=tMin; update(); });
 map.on('click',e=>{ const p=map.latLngToContainerPoint(e.latlng); let best=-1,bd=16;
-  if(epa&&$('lyM').checked){ let bm=-1,dm=14; epa.stations.forEach((st,k)=>{ const q=map.latLngToContainerPoint([st.lat,st.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<dm){dm=d;bm=k;} }); if(bm>=0){ selMon=bm; epaCard(); draw(); return; } } C.RECEPTORS.forEach((r,k)=>{ const q=map.latLngToContainerPoint([r.lat,r.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=k;} }); if(best>=0) selectTown(best,true); });
+  if(epa&&$('lyM').checked){ let bm=-1,dm=14; epa.stations.forEach((st,k)=>{ const q=map.latLngToContainerPoint([st.lat,st.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<dm){dm=d;bm=k;} }); if(bm>=0){ selMon=bm; selSite=-1; epaCard(); draw(); return; } }
+  if(sites&&$('lyM').checked){ let bs=-1,ds=11; sites.forEach((q,k)=>{ if(q.live)return; const pt=map.latLngToContainerPoint([q.lat,q.lon]), d=Math.hypot(pt.x-p.x,pt.y-p.y); if(d<ds){ds=d;bs=k;} }); if(bs>=0){ selSite=bs; sitesNote(); draw(); return; } } C.RECEPTORS.forEach((r,k)=>{ const q=map.latLngToContainerPoint([r.lat,r.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=k;} }); if(best>=0) selectTown(best,true); });
 
 /* ---- controls ---- */
 function goNow(){ const m=(Date.now()-C.T0)/60000; tMin=Math.max(0,Math.min(2880,Math.round(m/5)*5)); $('time').value=tMin; }
