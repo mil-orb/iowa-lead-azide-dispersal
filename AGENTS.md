@@ -4,7 +4,7 @@
 
 - Never put a real person's name, an email address or a home location in any file or commit. The About box links to this repository and names nobody.
 - Never add a bundled weather snapshot or lengthen the 10 minute shared copy. The page shows current data, with its fetch time, or nothing.
-- Never remove or bury the estimate warning or the EPA and Army links.
+- Never remove or bury the warning that this is not a measured or confirmed exposure map, the caveat badge on the map, or the EPA and Army links. Never describe modeled output or the Army's forecast maps as measurements.
 - Never add health thresholds, safety advice or a claim that the model was validated against measurements.
 - Never set network-derived text with `innerHTML`.
 - Never commit `.vercel/` or `.env*`.

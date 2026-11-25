@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Iowa Lead Azide Detonation Dispersal Simulator</title>
-<meta name="description" content="Live particle model of lead dust transport from the November 25, 2026 controlled detonation at the Iowa Army Ammunition Plant. A model estimate with links to EPA and Army data.">
+<meta name="description" content="A model of where lead dust could travel after the November 25, 2026 detonation at the Iowa Army Ammunition Plant. Not a measured or confirmed exposure map. Shows EPA monitor readings alongside.">
 <meta property="og:title" content="Iowa Lead Azide Detonation Dispersal Simulator">
-<meta property="og:description" content="Live particle model of lead dust transport from the Nov 25, 2026 Iowa Army Ammunition Plant detonation. A model estimate, with links to EPA and Army data.">
+<meta property="og:description" content="A model of where lead dust could travel after the Nov 25, 2026 Iowa Army Ammunition Plant detonation. Not a measured or confirmed exposure map.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -45,6 +45,8 @@ a{color:var(--accent)}
 @media (max-width:920px){#mapwrap{aspect-ratio:.9}}
 #map{position:absolute;inset:0}
 #ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:450}
+#mapcav{position:absolute;left:8px;bottom:8px;z-index:500;background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line);border-radius:5px;padding:3px 9px;font-size:.74rem;max-width:calc(100% - 150px);pointer-events:none}
+#mapcav b{font-weight:600}
 #mapmsg{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:500;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-size:.84rem}
 .leaflet-container{background:var(--line);font-family:var(--f-body)}
 .darkmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9) saturate(.6)}
@@ -124,6 +126,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .sq{display:inline-block;width:10px;height:10px;border:1.5px solid #16212b;margin-right:6px;vertical-align:-1px}
 .sq.hollow{background:var(--halo);border-color:var(--ink)}
 td .sq{margin-right:7px}
+.scen{margin:8px 0 0;padding:6px 10px;border-left:3px solid var(--warn-line);background:var(--warn-bg);color:var(--warn-ink);font-size:.84rem;border-radius:0 5px 5px 0}
+.lgroup{font-size:.78rem;color:var(--muted);display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.lgroup>b{font-weight:600;color:var(--ink);font-size:.76rem}
 .hbtns{display:flex;gap:8px;align-items:center}
 .gh{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:5px 11px;color:var(--ink);text-decoration:none;background:var(--panel)}
 .gh:hover{border-color:var(--accent)} .gh svg{width:16px;height:16px;fill:currentColor}
@@ -142,7 +147,7 @@ td .sq{margin-right:7px}
     <div class="hbtns"><a class="gh" href="https://github.com/mil-orb/iowa-lead-azide-dispersal" target="_blank" rel="noopener" aria-label="Source code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>GitHub</span></a><button id="aboutBtn" type="button">About</button></div>
   </header>
 
-  <div class="warn" role="note"><strong>This is a model estimate. It measures nothing.</strong> For measured lead levels use EPA's <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data dashboard</a> and <a href="https://response.epa.gov/site/site_profile.aspx?site_id=17211" target="_blank" rel="noopener">response site</a>. For official maps, the all-clear and instructions use the <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant" target="_blank" rel="noopener">Army's notification page</a>. Official guidance overrides anything shown here. To ask EPA for sampling at your address call 1-833-649-9624.</div>
+  <div class="warn" role="note"><strong>This is a scenario, not a record of what happened.</strong> EPA reported no detection of airborne lead at its real-time monitors after the detonation. That is the observation. This page shows where lead dust would travel <em>if</em> an assumed amount had been released. No measurement shows that release occurred, and this is not a measured or confirmed exposure map. The only measurements on this page are EPA's air monitor readings (the squares on the map and the EPA card). The Army's maps are official, but they are planning forecasts made before the detonation, and they are measurements of nothing either. For measured lead levels use EPA's <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data dashboard</a> and <a href="https://response.epa.gov/site/site_profile.aspx?site_id=17211" target="_blank" rel="noopener">response site</a>. For official maps, the all-clear and instructions use the <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant" target="_blank" rel="noopener">Army's notification page</a>. Official guidance overrides anything shown here. To ask EPA for sampling at your address call 1-833-649-9624.</div>
 
   <div class="status">
     <span class="pill" id="src">Loading weather</span>
@@ -156,7 +161,7 @@ td .sq{margin-right:7px}
   <div class="main">
     <div class="col">
       <div class="panel mapbox">
-        <div id="mapwrap"><div id="map"></div><canvas id="ov" aria-label="Modeled particles and lead deposition drawn over the map"></canvas><div id="mapmsg">Loading weather…</div></div>
+        <div id="mapwrap"><div id="map"></div><canvas id="ov" aria-label="Modeled particles and modeled lead deposition drawn over the map. Not measurements."></canvas><div id="mapmsg">Loading weather…</div><div id="mapcav">Scenario from an assumed release. Not an observation. Squares are EPA readings.</div></div>
         <div class="tl">
           <div class="tlrow">
             <button id="play" type="button">Play</button>
@@ -168,51 +173,49 @@ td .sq{margin-right:7px}
           <div id="fcbar" title="Filled part: hours already past when the weather was fetched. The rest is forecast."><i id="fcfill"></i></div>
           <div class="tiny" id="fcnote"></div>
           <div class="layers">
-            <label class="chip"><input id="lyP" type="checkbox" checked> Particles</label>
-            <label class="chip"><input id="lyD" type="checkbox" checked> Deposition</label>
-            <label class="chip"><input id="lyC" type="checkbox" checked> Army map levels</label>
-            <label class="chip"><input id="lyM" type="checkbox" checked> EPA stations</label>
+            <label class="chip"><input id="lyP" type="checkbox" checked> Modeled particles</label>
+            <label class="chip"><input id="lyD" type="checkbox" checked> Modeled deposit</label>
+            <label class="chip"><input id="lyC" type="checkbox" checked> Outlines at the Army map levels</label>
+            <label class="chip"><input id="lyM" type="checkbox" checked> EPA stations (measured)</label>
             <label class="chip"><input id="lyW" type="checkbox"> Wind at
               <select id="wlev" aria-label="Wind height"><option value="0">10 m</option><option value="1">80 m</option><option value="3">180 m</option><option value="5">450 m</option><option value="8">1000 m</option><option value="10">1600 m</option></select></label>
           </div>
-          <div class="legend">
-            <span><i class="dot" style="background:var(--fine)"></i>3 µm and smaller (stays aloft)</span>
-            <span><i class="dot" style="background:var(--mid)"></i>5 to 10 µm</span>
-            <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
-            <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
-            <span>lead on the ground, µg/ft²</span>
-            <span><i class="sq" style="background:#59ff00"></i>EPA monitor reading under 32 µg/m³</span>
-            <span><i class="sq" style="background:#ffee00"></i>32 µg/m³ or more</span>
-            <span><i class="sq hollow"></i>no reading at this time</span>
-            <span><i class="dot" style="background:#149ece"></i>EPA station with dust and gas meters</span>
-            <span><i class="dot" style="background:#e500ff"></i>EPA station, lab samples only</span>
-            <span><i class="ln"></i>100 µg/ft²</span><span><i class="ln dash"></i>5 µg/ft²</span>
+          <div class="lgroup"><b>Modeled, not measured</b>
+            <div class="legend">
+              <span><i class="dot" style="background:var(--fine)"></i>particles 3 µm and smaller (stay aloft)</span>
+              <span><i class="dot" style="background:var(--mid)"></i>5 to 10 µm</span>
+              <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
+              <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
+              <span>possible lead on the ground, µg/ft²</span>
+              <span><i class="ln"></i>where the model reaches 100 µg/ft²</span><span><i class="ln dash"></i>5 µg/ft² (the two levels on the Army's forecast map)</span>
+            </div>
+          </div>
+          <div class="lgroup"><b>Measured by EPA</b>
+            <div class="legend">
+              <span><i class="sq" style="background:#59ff00"></i>monitor reading under 32 µg/m³</span>
+              <span><i class="sq" style="background:#ffee00"></i>32 µg/m³ or more</span>
+              <span><i class="sq hollow"></i>no reading at this time</span>
+            </div>
+          </div>
+          <div class="lgroup"><b>EPA stations with nothing published</b>
+            <div class="legend">
+              <span><i class="dot" style="background:#149ece"></i>dust and gas meters, lab samples</span>
+              <span><i class="dot" style="background:#e500ff"></i>lab samples only</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="panel">
         <h2>Latest Army maps <span class="tiny" id="armyT"></span></h2>
-        <p class="tiny" style="margin:4px 0 0">Pulled from the Army's public feed each time this page loads or refreshes. These are the official model products.</p>
+        <p class="tiny" style="margin:4px 0 0">Pulled from the Army's public feed each time this page loads or refreshes. These are the Army's official maps. They are forecasts from its planning model, made before the detonation. They do not show measured lead.</p>
         <div class="army" id="army"><div class="tiny">Loading the Army's latest maps…</div></div>
       </div>
     </div>
 
     <div class="col">
-      <div class="panel town">
-        <label class="lab" for="townSel">Check a town</label>
-        <select id="townSel" aria-describedby="townHead"><option value="-1">Choose a town…</option></select>
-        <p class="big" id="townHead">Pick a town to see when the modeled dust arrives and how much lead it leaves there. You can also click a dot on the map.</p>
-        <dl class="kv" id="townKv"></dl>
-        <div id="chartbox" hidden>
-          <canvas id="chart" aria-label="Modeled lead in air over time at the selected town"></canvas>
-          <div class="tiny" id="chartcap"></div>
-        </div>
-        <div class="btnrow"><button id="goArr" type="button" hidden>Jump to arrival time</button><button id="resetView" type="button" hidden>Back to the whole area</button></div>
-      </div>
-
       <div class="panel">
-        <h2>What EPA's air monitors measured <span class="tiny" id="epaT"></span></h2>
+        <h2>What was observed: EPA's air monitors <span class="tiny" id="epaT"></span></h2>
         <p class="big" id="epaHead">Loading EPA readings.</p>
         <div class="tablewrap"><table>
           <thead><tr><th>Monitor</th><th>km from site</th><th>Readings</th><th>At zero</th><th>Highest, µg/m³</th><th>When</th></tr></thead>
@@ -225,8 +228,22 @@ td .sq{margin-right:7px}
         <p class="tiny" style="margin:8px 0 0">These are EPA's own real-time readings of lead in air, read live from its <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data viewer</a>. They are the only measurements on this page. Click a row or a square on the map to chart a monitor. On the map, the number beside each square is the reading nearest the time shown, and the square takes that reading's colour.</p>
       </div>
 
+      <div class="panel town">
+        <label class="lab" for="townSel">Check a town in the scenario</label>
+        <p class="scen" id="scen">The scenario assumes a release that no measurement has confirmed.</p>
+        <select id="townSel" aria-describedby="townHead"><option value="-1">Choose a town…</option></select>
+        <p class="big" id="townHead">Pick a town to see when the modeled dust arrives and how much lead it leaves there. You can also click a dot on the map.</p>
+        <dl class="kv" id="townKv"></dl>
+        <p class="tiny" id="townDef" style="margin:8px 0 0"><b>Arrival</b> means the first time one ten-thousandth of the assumed PM10-size release is in the air within 20 km of the town, at any height. It says nothing about how much reaches the ground or anyone's lungs. <b>Precision:</b> the detonation point is inferred, the release is assumed and the weather grid is about 50 km wide, so read these as figures for an area, not for a town. Times are good to about an hour near the site and to a few hours a day out. Amounts are good to a factor of ten at best.</p>
+        <div id="chartbox" hidden>
+          <canvas id="chart" aria-label="Modeled lead in air over time at the selected town"></canvas>
+          <div class="tiny" id="chartcap"></div>
+        </div>
+        <div class="btnrow"><button id="goArr" type="button" hidden>Jump to arrival time</button><button id="resetView" type="button" hidden>Back to the whole area</button></div>
+      </div>
+
       <div class="panel">
-        <h2>The plume at this time <span class="tiny" id="sumT"></span></h2>
+        <h2>The scenario plume at this time <span class="tiny" id="sumT"></span></h2>
         <p class="big" id="sumHead">Running model</p>
         <dl class="kv" id="sumKv"></dl>
         <div class="budget" id="bud"></div>
@@ -240,9 +257,9 @@ td .sq{margin-right:7px}
       </div>
 
       <div class="panel">
-        <h2>All towns <span class="tiny">(click one to see it on the map)</span></h2>
+        <h2>All towns in the scenario <span class="tiny">(assumed release, not observed. Click one to see it on the map)</span></h2>
         <div class="tablewrap"><table>
-          <thead><tr><th>Place</th><th>km</th><th>First arrival</th><th>Peak air, µg/m³</th><th>On ground, µg/ft²</th></tr></thead>
+          <thead><tr><th>Place</th><th>km</th><th>Would arrive</th><th>Peak air, µg/m³</th><th>On ground, µg/ft²</th></tr></thead>
           <tbody id="rows"></tbody>
         </table></div>
       </div>
@@ -295,6 +312,8 @@ td .sq{margin-right:7px}
   <details class="panel notes">
     <summary>How the model works and where it is weak</summary>
     <ul>
+      <li><b>A scenario, not an account of what happened.</b> EPA reported no detection of airborne lead at its real-time monitors after the detonation. Everything the model draws starts from an assumed release, shown beside every town figure. By default that is the Army's planning case, because the monitors cannot rule it out while the detonation point is unknown, but no measurement shows it occurred. Town figures are rounded, and they describe an area about 40 km across, because the source point, the release and a 50 km weather grid do not support anything finer.</li>
+      <li><b>What is measured and what is not.</b> Three kinds of information appear here. Modeled: the particles, the coloured deposit, the outlines, every town figure and the plume summary. These show potential, worked out from weather data and assumptions, and none of it is confirmed. Measured: EPA's air monitor readings, and the airport winds used in the wind check. Official forecast: the Army's maps, shown as images, which came from its planning model before the detonation. Nothing on this page is a measurement of anyone's exposure.</li>
       <li><b>The event, as published.</b> At 9:00 AM CST on November 25, 2026 the Army detonated two earth-covered magazines at once, holding 68 drums of degraded lead azide with a stated net explosive weight of more than 9,700 lb. Lead azide is 71.1% lead by mass, so the stockpile held about 3,130 kg of lead. The magazines were surrounded by sand-filled barriers about two stories high, a water wall of more than 100,000 gallons, foam and gel blocks, with the blast vented toward the south and southwest. The Army has not said how much lead escaped. It did cite a 1977 detonation of about 7,000 lb with no such measures, in which about 25% of the lead went into the air.</li>
       <li><b>Chemistry.</b> Lead azide, Pb(N₃)₂, detonates to lead and nitrogen gas. The lead comes off as vapor and fine droplets that oxidize in air to lead oxide, which is what the Army's own modeling describes ("a small fraction will be fine lead oxide dust" in a cloud that is mostly nitrogen, sand, soil and water vapor). The model therefore tracks the mass of lead and moves it as lead oxide particles (9.5 g/cm³) by default. Lead oxide does not break down or evaporate in the air, so no chemistry is applied in flight. Two things the model leaves out would both make real particles settle differently: fresh fume clumps into loose aggregates that fall more slowly than solid spheres of the same size, and lead stuck to sand or soil grains travels with those much larger grains. A reviewer of the permit also named hydrochloric acid and organic combustion products as possible emissions. Those are not modeled.</li>
       <li><b>Where it was.</b> The exact magazines are not published. The Army's Environmental Assessment places them near the headwaters of Long Creek in the western half of the plant, and EPA's four real-time monitors lie on one straight line. The model uses the point where that line crosses the creek, and treats it as uncertain by a few km.</li>
@@ -324,7 +343,7 @@ td .sq{margin-right:7px}
   <h2 id="aboutH">About this simulator</h2>
   <p>Open source. The code, tests and method notes are on <a class="gh inl" href="https://github.com/mil-orb/iowa-lead-azide-dispersal" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>GitHub</span></a>.</p>
   <p>It runs a particle dispersion model in your browser using live Open-Meteo weather data, and sets its release amount so the result lines up with the Army's published deposition map. It also pulls the Army's latest maps so you can compare them side by side.</p>
-  <p>It is an independent estimate with no connection to the U.S. Army, EPA or any agency. It measures nothing and can be wrong. For measured lead levels and instructions use the EPA and Army links on the page.</p>
+  <p>It is not a measured or confirmed exposure map. It shows where dust could go. The only measurements on the page are EPA's monitor readings, and the Army's maps are forecasts. It is an independent estimate with no connection to the U.S. Army, EPA or any agency, and it can be wrong. For measured lead levels and instructions use the EPA and Army links on the page.</p>
   <form method="dialog"><button type="submit">Close</button></form>
 </dialog>
 
@@ -779,7 +798,7 @@ function applyBasis(){
   if(basis==='epa'&&!fits.epa) basis='army';
   if(basis==='epa') M=fits.epa; else if(basis==='army'&&isFinite(fits.army)&&fits.army>0) M=Math.min(C.LEAD_KG,Math.max(1e-4,fits.army));
   $('cMass').value=Math.log10(M); document.querySelectorAll('input[name=basis]').forEach(r=>{ r.checked=r.value===basis; if(r.value==='epa')r.disabled=!fits.epa; });
-  setScale(); showCtl();
+  setScale(); showCtl(); scenLine();
 }
 function summarize(){
   if(!sim)return; const nF=sim.nF, D=C.DGRID;
@@ -796,7 +815,7 @@ function summarize(){
   const order=C.RECEPTORS.map((r,k)=>k).sort((a,b)=>{const A=recStats[a],B=recStats[b]; if((A.any>=0)!==(B.any>=0))return A.any>=0?-1:1; return A.any>=0?(A.any-B.any)||(A.dist-B.dist):A.dist-B.dist;});
   const tb=$('rows'); tb.innerHTML='';
   order.forEach(k=>{ const s=recStats[k], tr=document.createElement('tr'); tr.tabIndex=0; tr.dataset.k=k; if(s.any<0)tr.className='none';
-    [C.RECEPTORS[k].name, s.dist.toFixed(0), s.any<0?'not reached':fmtDur(s.any*sim.FRAME/60), s.peak>0?sig(s.peak*M):'0', s.dep>0?sig(s.dep*M):'0'].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);});
+    [C.RECEPTORS[k].name, s.dist.toFixed(0), s.any<0?'would not reach':approxShort(s.any*sim.FRAME/60), s.peak>0?sig1(s.peak*M):'0', s.dep>0?sig1(s.dep*M):'0'].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);});
     const pick=()=>selectTown(k); tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
     tb.appendChild(tr); });
   markSel(); townCard();
@@ -887,7 +906,7 @@ function drawChart(){
   if(mx>0){ g.beginPath(); for(let f=0;f<sim.nF;f++){const x=L+(w-L-Rr)*f/(sim.nF-1),y=h-B-(h-B-T)*ser[f]/mx; f?g.lineTo(x,y):g.moveTo(x,y);} g.strokeStyle=css('--accent');g.lineWidth=1.6;g.stroke();
     g.lineTo(w-Rr,h-B);g.lineTo(L,h-B);g.closePath();g.globalAlpha=.15;g.fillStyle=css('--accent');g.fill();g.globalAlpha=1; }
   const x=L+(w-L-Rr)*tMin/2880; g.strokeStyle=css('--ink');g.lineWidth=1;g.beginPath();g.moveTo(x,T);g.lineTo(x,h-B);g.stroke();
-  $('chartcap').textContent=C.RECEPTORS[selRec].name+': modeled lead in air, µg/m³, averaged over the lowest 100 m within 20 km.'+(mx>0?'':' Nothing reaches it in this run.');
+  $('chartcap').textContent=C.RECEPTORS[selRec].name+' area: lead in air in this scenario, µg/m³, averaged over the lowest 100 m within 20 km. Assumed release, not observed.'+(mx>0?'':' Nothing reaches it in this run.');
 }
 function kvFill(id,rows){ const kv=$(id); kv.innerHTML=''; rows.forEach(([a,b])=>{const dt=document.createElement('dt');dt.textContent=a;const dd=document.createElement('dd');dd.textContent=b;kv.append(dt,dd);}); }
 function update(){
@@ -900,7 +919,7 @@ function update(){
     const cx=sim.cen[f*3],cy=sim.cen[f*3+1], rows=[];
     if(v[0]<1e-5||cx!==cx){ $('sumHead').textContent=v[3]>0.5?'Most of the modeled lead has left the map area.':'All the modeled lead is on the ground or has left the map by this time.'; }
     else { const db=distBear(cy,cx); let best=0,bd=1e9; C.RECEPTORS.forEach((r,k)=>{const d=Math.hypot((r.lon-cx)*C.R*Math.cos(cy*Math.PI/180),(r.lat-cy)*C.R); if(d<bd){bd=d;best=k;}});
-      $('sumHead').textContent=db.km<3?'The dust cloud is over the detonation site.':'The dust still airborne is centered '+db.km.toFixed(0)+' km '+compass(db.b)+' of the site, '+(bd<15000?'over ':(bd/1000).toFixed(0)+' km from ')+C.RECEPTORS[best].name.split(',')[0]+'.';
+      $('sumHead').textContent=db.km<3?'The dust cloud is over the detonation site.':'In this scenario the dust still airborne would be centered '+db.km.toFixed(0)+' km '+compass(db.b)+' of the site, '+(bd<15000?'over ':(bd/1000).toFixed(0)+' km from ')+C.RECEPTORS[best].name.split(',')[0]+'.';
       rows.push(['Leading edge',(sim.cen[f*3+2]/1000).toFixed(0)+' km from the site']); }
     rows.push(['Still airborne',sig(v[0]*M)+' kg of '+sig(M)+' kg']);
     if(sim.fineAir) rows.push(['PM10-size dust still airborne',pct(sim.fineAir[f])+' of '+sig(sim.fineFrac*M)+' kg'],['PM2.5-size dust still airborne',pct(sim.susAir[f])+' of '+sig(sim.susFrac*M)+' kg']);
@@ -1019,20 +1038,27 @@ let refreshing=false, retryT=0;
 async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ loadSites(); const r=await Promise.all([loadMet(),loadEPA()]); epaCard(); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
 
 /* ---- town selection ---- */
-function durWords(min){ if(min<60)return Math.round(min)+' minutes'; const h=Math.floor(min/60), m=Math.round(min%60); return m?h+' h '+m+' min':h+(h===1?' hour':' hours'); }
+// Rounded on purpose: the inputs do not support more.
+function approxDur(min){ if(min<20)return 'in the first 15 minutes'; if(min<90)return 'about '+Math.round(min/15)*15+' minutes'; if(min<360)return 'about '+(Math.round(min/30)/2)+' hours'; if(min<1080)return 'about '+Math.round(min/60)+' hours'; return 'roughly '+Math.round(min/120)*2+' hours'; }
+function approxShort(min){ if(min<20)return 'at once'; if(min<90)return '~'+Math.round(min/15)*15+' min'; if(min<360)return '~'+(Math.round(min/30)/2)+' h'; if(min<1080)return '~'+Math.round(min/60)+' h'; return '~'+Math.round(min/120)*2+' h'; }
+function approxClock(min){ const step=min<360?1800e3:min<1080?3600e3:7200e3; return 'around '+fmtCST(Math.round((C.T0+min*60000)/step)*step); }
+function sig1(v){ return v>0?sig(+v.toPrecision(1)):'0'; }
+function scenName(){ if(!fits)return 'assumed'; if(basis==='custom')return 'a custom amount'; if(basis==='epa'&&fits.epa&&fits.army&&fits.epa<fits.army*0.98)return 'the most the EPA monitors would allow'; return 'the Army planning case'; }
+function scenLine(){ const el=$('scen'); if(!el)return; el.textContent='Scenario: an assumed release of '+sig(M)+' kg of lead ('+scenName()+'). No measurement shows this release occurred. EPA reported no airborne lead detected at its monitors.';
+  const mc=$('mapcav'); if(mc) mc.textContent='Scenario from an assumed release of '+sig(M)+' kg. Not an observation. Squares are EPA readings.'; }
 function townCard(){
-  const k=selRec, head=$('townHead'), go=$('goArr'); $('resetView').hidden=k<0;
-  if(k<0){ head.textContent='Pick a town to see when the modeled dust arrives and how much lead it leaves there. You can also click a dot on the map.'; kvFill('townKv',[]); go.hidden=true; return; }
-  const r=C.RECEPTORS[k], nm=r.name.split(',')[0], db=distBear(r.lat,r.lon), rows=[['From the detonation site',db.km.toFixed(0)+' km '+compass(db.b)]];
+  const k=selRec, head=$('townHead'), go=$('goArr'); $('resetView').hidden=k<0; scenLine();
+  if(k<0){ head.textContent='Pick a town to see when dust would arrive in this scenario and how much lead it would leave. You can also click a dot on the map.'; kvFill('townKv',[]); go.hidden=true; return; }
+  const r=C.RECEPTORS[k], nm=r.name.split(',')[0], db=distBear(r.lat,r.lon), rows=[['Assumed release',sig(M)+' kg, '+scenName()+'. Not observed'],['From the detonation site','about '+(db.km<50?Math.round(db.km/5)*5:Math.round(db.km/10)*10)+' km '+compass(db.b)]];
   if(!sim||!recStats[k]){ head.textContent=nm+': waiting for the model run.'; kvFill('townKv',rows); go.hidden=true; return; }
   const s=recStats[k];
-  if(s.any<0){ head.textContent='The modeled dust does not reach '+nm+' in the 48 hours after the detonation.'; go.hidden=true; }
+  if(s.any<0){ head.textContent='In this scenario, modeled dust would not reach the '+nm+' area within 48 hours.'; go.hidden=true; }
   else { const am=s.any*sim.FRAME/60;
-    head.textContent=am<1?nm+' is inside the first dust cloud right at the detonation.':'The modeled dust reaches '+nm+' about '+durWords(am)+' after the detonation.';
-    rows.push(['First arrival',fmtCST(C.T0+am*60000)]);
-    if(s.peak>0) rows.push(['Peak lead in air near the ground',sig(s.peak*M)+' µg/m³'],['Of which PM10-size',sig(s.peakFine*M)+' µg/m³'],['Time of that peak',fmtCST(C.T0+s.pf*sim.FRAME*1000)]); else rows.push(['Near the ground','the dust stays above 100 m']);
+    head.textContent='If '+sig(M)+' kg of lead had been released, modeled dust would reach the '+nm+' area '+approxDur(am)+' after the detonation.';
+    rows.push(['Would first arrive',approxClock(am)]);
+    if(s.peak>0) rows.push(['Peak lead in air near the ground, if released','about '+sig1(s.peak*M)+' µg/m³'],['Of which PM10-size','about '+sig1(s.peakFine*M)+' µg/m³']); else rows.push(['Near the ground','the dust would stay above 100 m']);
     go.hidden=false; }
-  rows.push(['Lead left on the ground after 48 h',(s.dep>0?sig(s.dep*M):'0')+' µg/ft²']);
+  rows.push(['Lead left on the ground after 48 h, if released',(s.dep>0?'about '+sig1(s.dep*M):'0')+' µg/ft²']);
   kvFill('townKv',rows);
 }
 const HOME=[[38.3,-94.9],[41.6,-89.6]];

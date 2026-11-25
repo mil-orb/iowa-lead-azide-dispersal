@@ -2,7 +2,7 @@
 
 # Iowa Lead Azide Detonation Dispersal Simulator
 
-**A live, open model of where the lead dust went after the Army's controlled detonation at the Iowa Army Ammunition Plant on November 25, 2026.**
+**A live, open model of where lead dust would travel if it had been released by the Army's controlled detonation at the Iowa Army Ammunition Plant on November 25, 2026.**
 
 ### [Open the simulator → iowa-lead-azide-dispersal.vercel.app](https://iowa-lead-azide-dispersal.vercel.app)
 
@@ -18,7 +18,7 @@
 </div>
 
 > [!IMPORTANT]
-> **This is a model estimate. It measures nothing.** For measured lead levels use EPA's [data viewer](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6) and [response site](https://response.epa.gov/site/site_profile.aspx?site_id=17211). For official maps, the all-clear and instructions use the [Army's notification page](https://www.army.mil/asc#org-iowa-army-ammunition-plant). This project has no connection to the Army, EPA or any agency. Do not use its numbers for health decisions.
+> **This is a scenario, not a record of what happened.** EPA reported no detection of airborne lead at its real-time monitors after the detonation. That is the observation. This model shows where lead dust would travel *if* an assumed amount had been released. No measurement shows that release occurred, and this is not a measured or confirmed exposure map. The only measurements in it are EPA's air monitor readings (and the airport winds used to check the forecast). The Army's maps are official planning forecasts, made before the detonation. For measured lead levels use EPA's [data viewer](https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6) and [response site](https://response.epa.gov/site/site_profile.aspx?site_id=17211). For official maps, the all-clear and instructions use the [Army's notification page](https://www.army.mil/asc#org-iowa-army-ammunition-plant). This project has no connection to the Army, EPA or any agency. Do not use its numbers for health decisions.
 
 ## Contents
 
@@ -38,18 +38,30 @@
 
 At 9:00 AM CST on November 25, 2026 the U.S. Army detonated 68 drums of degraded lead azide in place at the Iowa Army Ammunition Plant in Middletown, Iowa. The Army published planning maps of where lead dust might land. EPA set up air monitors. Nobody published a tool the public could run.
 
-This is that tool. It is a particle dispersion model that runs in your browser on live weather data. It follows 48,000 model particles of different sizes for 48 hours, shows EPA's real air readings next to its own prediction, and says plainly what it does not know.
+This is that tool. It is a particle dispersion model that runs in your browser on live weather data. It takes an assumed release, shown beside every figure, and follows 48,000 model particles of different sizes for 48 hours. It puts EPA's real air readings first, next to its own scenario, and says plainly what it does not know.
+
+It does not show what happened. EPA's monitors detected no airborne lead, and nothing published so far establishes that the release in the scenario occurred.
 
 Two things it found on the day:
 
 - **The dust that matters for distance is a tiny share of the lead.** Coarse dust, most of the mass, is on the ground within hours near the site. Lead particles small enough to count as PM2.5 stay airborne for days and, on the Nov 25 forecast, travel from Iowa to the Gulf coast in about 36 hours.
 - **EPA's monitors read close to nothing.** Of the first 239 readings after the detonation, 223 were zero and the highest was 0.010 µg/m³. EPA's own short-term screening level is 32 µg/m³.
 
+### What is modeled, what is measured
+
+| On the page | What it is |
+|---|---|
+| Particles, coloured deposit, outlines, town figures, plume summary | **Modeled.** Potential, from weather data and assumptions. Not confirmed |
+| EPA monitor squares, the EPA readings table and chart | **Measured**, by EPA |
+| Airport winds in the wind check | **Measured**, by the National Weather Service |
+| Army deposition maps (images) | **Official forecast** from the Army's planning model, made before the detonation |
+| EPA's other 39 stations | Positions only. No readings published |
+
 ## What you can do with it
 
 | | |
 |---|---|
-| **Check a town** | Pick any of 61 towns from Iowa to the Gulf coast. See when the modeled dust arrives, the peak in the air, how much of that is PM10-size, and what is left on the ground. |
+| **Check a town in the scenario** | Pick any of 61 towns from Iowa to the Gulf coast. See when dust would arrive if the assumed amount had been released, with the assumed release and the definition of arrival shown beside it. Figures are rounded and describe an area, because the inputs do not support town-level precision. |
 | **Play the timeline** | Scrub or play 48 hours. Watch coarse dust fall out and fine dust keep going. |
 | **See EPA's readings** | A table and chart for each of EPA's four real-time lead monitors, read live. The reading nearest the displayed time shows beside each monitor on the map. All 43 of EPA's listed sampling stations are drawn, in the colours of EPA's own legend (monitor squares green under 32 µg/m³, yellow at or above). |
 | **Compare with the Army** | The Army's newest deposition maps load next to the model, and the model's deposition is scored against the Army's two contour areas. |

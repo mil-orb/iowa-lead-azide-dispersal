@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 (2026-11-25)
+
+Reframed after a reader's criticism that the page presented an assumed release as if it had happened.
+
+- The page opens with the observation: EPA reported no airborne lead detected. EPA's readings come before any model output.
+- Every town figure shows the assumed release beside it and uses conditional wording.
+- Arrival is defined next to the town readout.
+- Times and amounts are rounded, and a note says they describe an area and how far to trust them.
+- The map carries a label naming the assumed release.
+
+## 1.9.0 (2026-11-25)
+
+- The page states plainly that it is not a measured or confirmed exposure map, on the banner, on the map itself and in the About box.
+- The legend is grouped into modeled, measured by EPA, and stations with nothing published. Layer names say which is which.
+- The Army's maps are described as planning forecasts, not measurements.
+
 ## 1.8.0 (2026-11-25)
 
 - EPA stations are coloured by EPA's own legend, copied from its data viewer: monitor squares green under 32 µg/m³ and yellow at 32 µg/m³ or more, sampling stations in its two instrument colours. No other exposure classes are added.

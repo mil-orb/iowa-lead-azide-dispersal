@@ -44,7 +44,9 @@ The model lives in `<script id="core">` in `index.html` and has no DOM access, s
 - EPA station colours follow EPA's legend exactly: one split at 32 µg/m³ for monitors, instrument type for the rest. Do not add classes EPA does not use.
 - Report the monitor comparison as a limit with its noise. Never present it as a measured release.
 - No thresholds or advice of our own. An agency's level may be quoted with attribution, as the page does for EPA's screening level and the Army's map legend.
-- The page must keep saying it is an estimate and keep the EPA and Army links at the top.
+- The page must keep saying it is not a measured or confirmed exposure map, on the banner and on the map itself, and keep the EPA and Army links at the top.
+- Lead with what was observed. Every scenario figure shows the assumed release beside it, uses conditional wording ("would", "if released"), and is rounded to what the inputs support. Never write as if the modeled release happened.
+- Label every figure as modeled, measured or official forecast. EPA's monitor readings and the airport winds are the only measurements. The Army's maps are forecasts.
 
 **Code**
 
