@@ -73,3 +73,27 @@ test('area lookups invert each other', () => {
   const area = C.areaAbove(curve, 5 / C.UGFT2 / mass);
   assert.ok(Math.abs(area - target) / target < 0.1, 'fitted release reproduces the target area');
 });
+
+test('a monitor downwind sees fine dust and one upwind sees none', () => {
+  const down = { lat: C.SRC.lat - 0.1, lon: C.SRC.lon - 0.13 }, up = { lat: C.SRC.lat + 0.1, lon: C.SRC.lon + 0.13 };
+  const sim = run(C.parseMet(fakeWeather({ dir: 45, speed: 6 })), { monitors: [down, up], nPer: 400, dt: 50 });
+  const total = (a) => a.reduce((x, y) => x + y, 0);
+  assert.ok(total(sim.monAvg[0]) > 0, 'downwind monitor records something');
+  assert.strictEqual(total(sim.monAvg[1]), 0, 'upwind monitor records nothing');
+});
+
+test('the fine grid overrides the wide grid where it covers', () => {
+  const wide = C.parseMet(fakeWeather({ dir: 45, speed: 6 }));
+  const hours = 14, fill = (v) => new Array(hours).fill(v);
+  const one = fakeWeather({ dir: 90, speed: 3 })[0].hourly, hourly = {};
+  for (const k of Object.keys(one)) hourly[k] = one[k].slice(0, hours);
+  const np = C.NEST.nx * C.NEST.ny;
+  wide.nest = C.parseMet(Array.from({ length: np }, () => ({ elevation: 200, hourly })), C.NEST, 12);
+  const o = {};
+  assert.ok(C.sample(wide, C.SRC.lon, C.SRC.lat, 10, 2, o));
+  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 3) < 1e-3, 'inside the fine grid the wind is the fine one');
+  assert.ok(C.sample(wide, -95, 38, 10, 2, o));
+  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'outside it the wind is the wide one');
+  assert.ok(C.sample(wide, C.SRC.lon, C.SRC.lat, 10, 30, o));
+  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'after the fine grid ends the wide one takes over');
+});

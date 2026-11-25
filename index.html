@@ -13,14 +13,14 @@
 :root{
   --bg:#f3f5f7; --panel:#ffffff; --ink:#16212b; --muted:#5a6875; --line:#d5dbe1; --border:#8d99a5;
   --accent:#0f5f8a; --warn-bg:#fff3d1; --warn-ink:#5b4300; --warn-line:#e0b83a; --bad:#a3261c;
-  --fine:#1769aa; --mid:#7a3fb0; --coarse:#3a4651; --arrow:#5f6d7a; --halo:#ffffff;
+  --fine:#1769aa; --mid:#7a3fb0; --coarse:#3a4651; --arrow:#5f6d7a; --halo:#ffffff; --mon:#0a7d4f;
   --air:#1769aa; --dry:#b4662a; --wet:#2a8f86; --exit:#9aa5af;
   --f-display:"Space Grotesk",system-ui,sans-serif; --f-body:Inter,system-ui,sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){ :root{
   --bg:#0f151b; --panel:#17202a; --ink:#e4eaef; --muted:#93a1ae; --line:#2a3642; --border:#5d6b78;
   --accent:#6bb8e6; --warn-bg:#3a2e08; --warn-ink:#f5dc8c; --warn-line:#8a6d12; --bad:#ff8a7a;
-  --fine:#6bb8e6; --mid:#c79bf0; --coarse:#d7dee4; --arrow:#8a99a7; --halo:#0f151b;
+  --fine:#6bb8e6; --mid:#c79bf0; --coarse:#d7dee4; --arrow:#8a99a7; --halo:#0f151b; --mon:#4fd39b;
   --air:#6bb8e6; --dry:#e09a5a; --wet:#5cc9bf; --exit:#566371; color-scheme:dark } }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -115,6 +115,11 @@ h2{font-size:1rem}
 .sub-d{margin-top:10px;border-top:1px solid var(--line);padding-top:8px} .sub-d summary{font-family:var(--f-body);font-weight:500;font-size:.86rem;color:var(--muted)}
 details.panel>summary{font-size:1rem}
 tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.basis{display:flex;flex-wrap:wrap;gap:6px 8px;font-size:.84rem}
+.basis label.chip{display:flex;gap:5px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:3px 11px 3px 8px;cursor:pointer;user-select:none}
+.basis label.chip:has(input:checked){background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:var(--accent)}
+.basis input{accent-color:var(--accent)}
+.dia{display:inline-block;width:8px;height:8px;background:var(--mon);transform:rotate(45deg);margin-right:7px;vertical-align:0}
 .hbtns{display:flex;gap:8px;align-items:center}
 .gh{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:5px 11px;color:var(--ink);text-decoration:none;background:var(--panel)}
 .gh:hover{border-color:var(--accent)} .gh svg{width:16px;height:16px;fill:currentColor}
@@ -139,6 +144,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
     <span class="pill" id="src">Loading weather</span>
     <span id="srcnote"></span>
     <button id="refresh" type="button">Refresh now</button>
+    <span class="tiny" id="refine" hidden>Refining with 48,000 particles…</span>
   </div>
   <div id="prog"></div>
 
@@ -160,6 +166,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
             <label class="chip"><input id="lyP" type="checkbox" checked> Particles</label>
             <label class="chip"><input id="lyD" type="checkbox" checked> Deposition</label>
             <label class="chip"><input id="lyC" type="checkbox" checked> Army map levels</label>
+            <label class="chip"><input id="lyM" type="checkbox" checked> EPA monitors</label>
             <label class="chip"><input id="lyW" type="checkbox"> Wind at
               <select id="wlev" aria-label="Wind height"><option value="0">10 m</option><option value="1">80 m</option><option value="3">180 m</option><option value="5">450 m</option><option value="8">1000 m</option><option value="10">1600 m</option></select></label>
           </div>
@@ -167,8 +174,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
             <span><i class="dot" style="background:var(--fine)"></i>2.5 µm and smaller</span>
             <span><i class="dot" style="background:var(--mid)"></i>5 to 10 µm</span>
             <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
-            <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span>0.05</span><span>5</span><span>500</span></span></span>
+            <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
             <span>lead on the ground, µg/ft²</span>
+            <span><i class="dia"></i>EPA air monitor</span>
             <span><i class="ln"></i>100 µg/ft²</span><span><i class="ln dash"></i>5 µg/ft²</span>
           </div>
         </div>
@@ -217,7 +225,18 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       </div>
 
       <div class="panel">
-        <h2>Checked against the Army's map</h2>
+        <h2>Checked against measurements</h2>
+        <p class="tiny" style="margin:4px 0 8px">What sets the amount of lead released:</p>
+        <div class="basis" role="radiogroup" aria-label="What sets the amount of lead released">
+          <label class="chip"><input type="radio" name="basis" value="epa" checked> EPA air monitors</label>
+          <label class="chip"><input type="radio" name="basis" value="army"> Army planning map</label>
+          <label class="chip"><input type="radio" name="basis" value="custom"> Custom</label>
+        </div>
+        <p class="big" id="fitHead">Waiting for the model run.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>EPA monitor</th><th>km</th><th>Measured peak, µg/m³</th><th>Model peak, µg/m³</th></tr></thead>
+          <tbody id="monRows"></tbody>
+        </table></div>
         <dl class="kv" id="fitKv"></dl>
         <p class="tiny" id="fitNote" style="margin:8px 0 0"></p>
       </div>
@@ -225,9 +244,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       <details class="panel">
         <summary>Change the assumptions</summary>
         <div class="ctl">
-          <label class="c" for="cFit"><input id="cFit" type="checkbox" checked> <span>Set the release so the modeled deposition areas match the Army's map (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft², from its 8:00 AM CST Nov 25 map)</span></label>
           <label class="r" for="cMass">Lead released to the air <span class="v" id="vMass"></span>
-            <input id="cMass" type="range" min="0" max="3.5" step="0.01" value="2.7"></label>
+            <input id="cMass" type="range" min="-3" max="3.5" step="0.01" value="0"></label>
           <label class="r" for="cTop">Top of the initial dust cloud <span class="v" id="vTop"></span>
             <input id="cTop" type="range" min="50" max="1500" step="25" value="100"></label>
           <label class="r" for="cMmd">Mass median particle diameter <span class="v" id="vMmd"></span>
@@ -244,14 +262,15 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   <details class="panel notes">
     <summary>How the model works and where it is weak</summary>
     <ul>
-      <li><b>Weather.</b> Hourly Open-Meteo data (NOAA HRRR and GFS) on a 0.6° grid of 154 points from 36.5 to 42.5°N and 96.5 to 88.7°W: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. It is fetched fresh on every load and every 30 minutes after. Nothing is cached, and if a refresh fails for 90 minutes the page blanks the result.</li>
-      <li><b>Particles.</b> 12,000 model particles in eight size bins from 0.3 to 80 µm, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top and move in 50 second steps with wind interpolated in space, height and time.</li>
+      <li><b>Weather.</b> Hourly Open-Meteo data (NOAA HRRR and GFS) on a 0.6° grid of 154 points from 36.5 to 42.5°N and 96.5 to 88.7°W, plus a 0.2° grid of 99 points over the first 150 km of the plume track for the first 12 hours: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. It is fetched on every load and every 30 minutes after, through a shared copy that is at most 10 minutes old, and the page shows the fetch time. If refreshing fails for 90 minutes the page hides the result.</li>
+      <li><b>Particles.</b> 48,000 model particles in eight size bins (a quick 12,000 particle pass shows first) from 0.3 to 80 µm, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top and move in 50 second steps with wind interpolated in space, height and time.</li>
       <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction and a Schiller-Naumann drag correction for the larger sizes. For lead oxide that is about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm.</li>
       <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point from 10 m wind, sunlight and cloud cover (Turner's method). The class sets turbulence intensity. Horizontal spread is a correlated random walk with a 1,000 s memory. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
       <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
       <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second.</li>
-      <li><b>Source.</b> Nobody has published how much lead left the site. By default the release is set so the modeled deposition matches the two contour areas on the Army's pre-detonation map, and the default cloud top (100 m) and particle size (25 µm median) are the pair that reproduced both areas at once on the Nov 25 weather. Other combinations can fit nearly as well. That ties this model to the Army's model. It says nothing about what was measured.</li>
-      <li><b>Checks.</b> Modeled mass is conserved to rounding error. The fitted release changes by under 10% with a different random seed, four times the particles or half the time step. The modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
+      <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 3 km, in 15 minute averages) and compares the totals.</li>
+      <li><b>Source.</b> Nobody has published how much lead left the site, so the release is set from data, two ways. The default uses the EPA monitors: the release is scaled until the modeled fine dust passing the monitors equals what they recorded above their pre-detonation background. The other uses the Army pre-detonation map: the release is scaled until the modeled deposition covers the same areas as its two contours. The monitor-based figure is far smaller. The monitors can miss coarse dust that falls near the site and a plume that passes overhead or to one side, so treat it as the low case and the Army map as the high case.</li>
+      <li><b>Checks.</b> Modeled mass is conserved to rounding error. The fitted release changes by under 10% with a different random seed, four times the particles or half the time step. The modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map, and the small rises at the EPA monitors arrive when the modeled plume does.</li>
       <li><b>Readouts.</b> "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
       <li><b>Weak points.</b> Hours after the fetch time are forecast. The weather grid is about 50 by 65 km, so terrain, river valleys and local wind shifts are missing. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
     </ul>
@@ -282,6 +301,8 @@ const NL=LEVELS.length, NP=GRID.nx*GRID.ny;
 const SRC={lat:40.805,lon:-91.255};
 const T0=Date.UTC(2026,10,25,15,0,0); // 9:00 AM CST
 const H_START='2026-11-25T14:00', H_END='2026-11-27T16:00';
+// Fine grid over the first 150 km of the plume track, for the first 12 hours.
+const NEST={lat0:39.6,dlat:0.2,ny:9,lon0:-92.8,dlon:0.2,nx:11}, NEST_END='2026-11-26T03:00';
 const DIAM=[0.3,1,2.5,5,10,20,40,80];
 const IY=[0.44,0.36,0.27,0.18,0.09,0.045], IZ=[0.21,0.17,0.13,0.09,0.06,0.035];
 const DGRID={d:0.02,nx:Math.round((LONMAX-GRID.lon0)/0.02),ny:Math.round((LATMAX-GRID.lat0)/0.02)};
@@ -301,13 +322,13 @@ const RECEPTORS=[
  ['St. Louis, MO',38.627,-90.199],['Topeka, KS',39.048,-95.678],['Lawrence, KS',38.972,-95.235],['Omaha, NE',41.257,-95.934]].map(r=>({name:r[0],lat:r[1],lon:r[2]}));
 const RREC=20000, HREC=100;
 
-function metUrl(){
-  const la=[],lo=[];
-  for(let j=0;j<GRID.ny;j++)for(let i=0;i<GRID.nx;i++){la.push((GRID.lat0+j*GRID.dlat).toFixed(1));lo.push((GRID.lon0+i*GRID.dlon).toFixed(1));}
+function metUrl(G,hEnd){
+  G=G||GRID; const la=[],lo=[];
+  for(let j=0;j<G.ny;j++)for(let i=0;i<G.nx;i++){la.push((G.lat0+j*G.dlat).toFixed(2));lo.push((G.lon0+i*G.dlon).toFixed(2));}
   let v='wind_speed_10m,wind_direction_10m,wind_speed_80m,wind_direction_80m,wind_speed_120m,wind_direction_120m,wind_speed_180m,wind_direction_180m';
   for(const p of PLEV) v+=',wind_speed_'+p+'hPa,wind_direction_'+p+'hPa,geopotential_height_'+p+'hPa';
   v+=',boundary_layer_height,precipitation,shortwave_radiation,cloud_cover';
-  return 'https://api.open-meteo.com/v1/forecast?latitude='+la.join(',')+'&longitude='+lo.join(',')+'&hourly='+v+'&wind_speed_unit=ms&timezone=UTC&start_hour='+H_START+'&end_hour='+H_END;
+  return 'https://api.open-meteo.com/v1/forecast?latitude='+la.join(',')+'&longitude='+lo.join(',')+'&hourly='+v+'&wind_speed_unit=ms&timezone=UTC&start_hour='+H_START+'&end_hour='+(hEnd||H_END);
 }
 function stab(ws,sw,cc){
   if(cc>=90) return 3;
@@ -315,10 +336,11 @@ function stab(ws,sw,cc){
   if(sw>10){ const i= sw>600?0: sw>300?1:2; return [[0,0.5,1],[0.5,1,2],[1,1.5,2],[2,2.5,3],[2,3,3]][w][i]; }
   return [[4,5],[4,5],[3,4],[3,3],[3,3]][w][cc>=50?0:1];
 }
-function parseMet(arr){
+function parseMet(arr,G,minH){
+  G=G||GRID; const NP=G.nx*G.ny;
   if(!Array.isArray(arr)||arr.length!==NP) throw new Error('Expected '+NP+' grid points, got '+(arr&&arr.length));
   const nt=arr[0].hourly.time.length;
-  if(nt<50) throw new Error('Weather data covers only '+nt+' hours');
+  if(nt<(minH||50)) throw new Error('Weather data covers only '+nt+' hours');
   const U=new Float32Array(nt*NL*NP),V=new Float32Array(nt*NL*NP),BLH=new Float32Array(nt*NP),P=new Float32Array(nt*NP),CLS=new Float32Array(nt*NP),S10=new Float32Array(nt*NP);
   const rad=Math.PI/180; let missing=0;
   for(let p=0;p<NP;p++){
@@ -341,9 +363,10 @@ function parseMet(arr){
     }
   }
   const time0=Date.parse(arr[0].hourly.time[0]+':00Z');
-  return {nt,U,V,BLH,P,CLS,S10,time0,h0:(T0-time0)/3600000,missing};
+  return {nt,U,V,BLH,P,CLS,S10,time0,h0:(T0-time0)/3600000,missing,grid:G,np:NP};
 }
-function sample(m,lon,lat,z,th,o){
+function sampleG(m,lon,lat,z,th,o){
+  const GRID=m.grid, NP=m.np;
   const fx=(lon-GRID.lon0)/GRID.dlon, fy=(lat-GRID.lat0)/GRID.dlat;
   if(fx<0||fy<0||fx>GRID.nx-1||fy>GRID.ny-1) return false;
   const ix=Math.min(GRID.nx-2,fx|0), iy=Math.min(GRID.ny-2,fy|0), ax=fx-ix, ay=fy-iy;
@@ -364,6 +387,8 @@ function sample(m,lon,lat,z,th,o){
   o.p=w00*m.P[b1+p00]+w10*m.P[b1+p10]+w01*m.P[b1+p01]+w11*m.P[b1+p11]; // precipitation is the sum over the hour ending at b1
   return true;
 }
+// Use the fine grid where and while it covers the point, the wide grid everywhere else.
+function sample(m,lon,lat,z,th,o){ const n=m.nest; if(n&&th<n.nt-1.001&&sampleG(n,lon,lat,z,th,o)) return true; return sampleG(m,lon,lat,z,th,o); }
 const MU=1.81e-5, RHOA=1.2, LAM=0.066e-6, NU=1.5e-5;
 function slip(d){return 1+(2*LAM/d)*(1.257+0.4*Math.exp(-1.1*d/(2*LAM)));}
 function settle(dUm,rho){
@@ -421,7 +446,10 @@ function createSim(met,prm){
   const cosS=Math.cos(SRC.lat*Math.PI/180);
   for(let i=0;i<N;i++){ const b=(i/nPer)|0; x[i]=SRC.lon+150*r.n()/(R*cosS); y[i]=SRC.lat+150*r.n()/R; z[i]=1+r.u()*(prm.top-1); m[i]=frac[b]/nPer; }
   const nF=Math.round(hours*3600/FRAME)+1, nc=DGRID.nx*DGRID.ny, keep=prm.frames!==false;
-  const fx=keep?new Float32Array(nF*N):null, fy=keep?new Float32Array(nF*N):null;
+  const fPer=Math.min(nPer,prm.show||nPer), fN=fPer*nb; // only this many particles per bin are kept for drawing
+  const fx=keep?new Float32Array(nF*fN):null, fy=keep?new Float32Array(nF*fN):null;
+  // Air monitors: fine particles (10 microns and under) in the lowest 50 m within 3 km, averaged over each 15 minutes.
+  const mons=prm.monitors||[], nM=mons.length, MONR=3000, MONH=50, monAcc=new Float64Array(nM), monAvg=mons.map(()=>new Float32Array(nF)), monCos=mons.map(q=>Math.cos(q.lat*Math.PI/180)), pm10=DIAM.map(d=>d<=10);
   const dep=new Float64Array(nc), depSnap=keep?new Float32Array(SNAP.length*nc):null;
   const recSfc=RECEPTORS.map(()=>new Float32Array(nF)),recAny=RECEPTORS.map(()=>new Float32Array(nF));
   const bud=new Float32Array(nF*4), cen=new Float32Array(nF*3); let dry=0,wet=0,exited=0,step=0,snapI=0;
@@ -432,7 +460,8 @@ function createSim(met,prm){
   }
   function record(){
     const tsec=Math.round(step*DT), f=Math.round(tsec/FRAME); let air=0,sx=0,sy=0;
-    for(let i=0;i<N;i++){ if(alive[i]){air+=m[i];sx+=m[i]*x[i];sy+=m[i]*y[i];} if(keep){ const q=f*N+i; if(alive[i]){fx[q]=x[i];fy[q]=y[i];} else {fx[q]=NaN;fy[q]=NaN;} } }
+    for(let i=0;i<N;i++){ if(alive[i]){air+=m[i];sx+=m[i]*x[i];sy+=m[i]*y[i];} if(keep){ const j=i%nPer; if(j<fPer){ const q=f*fN+((i/nPer)|0)*fPer+j; if(alive[i]){fx[q]=x[i];fy[q]=y[i];} else {fx[q]=NaN;fy[q]=NaN;} } } }
+    for(let k=0;k<nM;k++){ monAvg[k][f]=monAcc[k]*1e9/(Math.PI*MONR*MONR*MONH*FRAME); monAcc[k]=0; }
     bud[f*4]=air;bud[f*4+1]=dry;bud[f*4+2]=wet;bud[f*4+3]=exited;
     cen[f*3]=air>0?sx/air:NaN;cen[f*3+1]=air>0?sy/air:NaN;
     let far=0; if(air>0){ const ds=[]; for(let i=0;i<N;i++){ if(!alive[i])continue; ds.push(Math.hypot((x[i]-SRC.lon)*R*cosS,(y[i]-SRC.lat)*R)); } ds.sort((p,q)=>p-q); far=ds[Math.floor(ds.length*0.95)]||0; }
@@ -461,6 +490,7 @@ function createSim(met,prm){
         z2-=vs[b]*DT;
         if(z2<=0){ deposit(x[i],y[i],m[i],false); m[i]=0; alive[i]=0; continue; }
         z[i]=z2;
+        if(nM&&pm10[b]&&z2<MONH){ for(let k=0;k<nM;k++){ const dx=(x[i]-mons[k].lon)*R*monCos[k], dy=(y[i]-mons[k].lat)*R; if(dx*dx+dy*dy<MONR*MONR) monAcc[k]+=m[i]*DT; } }
         if(o.p>0){ const l=m[i]*(1-Math.exp(-8.4e-5*Math.pow(o.p,0.79)*DT)); m[i]-=l; deposit(x[i],y[i],l,true); }
       }
       step++;
@@ -468,10 +498,10 @@ function createSim(met,prm){
     }
     return step>=nSteps;
   }
-  return {advance,get done(){return step>=nSteps;},get progress(){return step/nSteps;},N,nPer,nF,FRAME,hours,fx,fy,dep,depSnap,recSfc,recAny,bud,cen,vs,frac,prm,
+  return {advance,get done(){return step>=nSteps;},get progress(){return step/nSteps;},N,nPer,fN,fPer,nF,FRAME,hours,fx,fy,monAvg,dep,depSnap,recSfc,recAny,bud,cen,vs,frac,prm,
     totals:()=>({dry,wet,exited,air:m.reduce((s,v)=>s+v,0)})};
 }
-g.Core={GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
+g.Core={NEST,NEST_END,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 
@@ -483,7 +513,9 @@ const REFRESH_MS=30*60000, STALE_MS=90*60000;
 let met=null, sim=null, runId=0, tMin=0, playing=false, selRec=-1, fetchedAt=0, failAt=0, firstRun=true;
 let M=100, curve=null, smFinal=null, recStats=[], bbox=null, fits=null;
 const RAMP=[[255,224,130],[250,160,60],[222,70,45],[130,25,95]];
-const VMIN=0.05, VMAX=500;
+let VMIN=0.05, VMAX=500;
+let epa=null, basis='epa', worker=null, passId=0;
+const EPA_URL='https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/IAAAP_Xact_Data_Public_Viewer/FeatureServer/0/query?where=1%3D1&outFields=Mon_Date_Time,Latitude,Longitude,Mon_Results,Mon_Units,Air_Station_ID&returnGeometry=false&orderByFields=Mon_Date_Time&f=json&resultRecordCount=2000&resultOffset=';
 const dark=matchMedia('(prefers-color-scheme: dark)');
 
 /* ---- map ---- */
@@ -515,7 +547,7 @@ function draw(){
   ctx.clearRect(0,0,W,H);
   const zm=map.getZoom(), S=256*Math.pow(2,zm), o=map.getPixelBounds().min;
   const X=lon=>S*(lon+180)/360-o.x, Y=lat=>{const s=Math.sin(lat*Math.PI/180);return S*(0.5-Math.log((1+s)/(1-s))/(4*Math.PI))-o.y;};
-  const col={ink:css('--ink'),fine:css('--fine'),mid:css('--mid'),coarse:css('--coarse'),arrow:css('--arrow'),halo:css('--halo'),accent:css('--accent')};
+  const col={mon:css('--mon'),ink:css('--ink'),fine:css('--fine'),mid:css('--mid'),coarse:css('--coarse'),arrow:css('--arrow'),halo:css('--halo'),accent:css('--accent')};
   const showD=$('lyD').checked, showC=$('lyC').checked;
   if(sim&&bbox&&(showD||showC)){
     const D=C.DGRID, nc=D.nx*D.ny, th=tMin/60; let s0=0; while(s0<C.SNAP.length-2&&C.SNAP[s0+1]<=th)s0++;
@@ -550,7 +582,7 @@ function draw(){
       ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-ux*5-uy*2.5,y1-uy*5+ux*2.5);ctx.lineTo(x1-ux*5+uy*2.5,y1-uy*5-ux*2.5);ctx.fill(); }
   }
   if(sim&&$('lyP').checked){
-    const ff=Math.min(sim.nF-1,tMin*60/sim.FRAME), f0=Math.min(sim.nF-2,ff|0), a=ff-f0, N=sim.N, nPer=sim.nPer, kx=S/360, ox=S/2-o.x;
+    const ff=Math.min(sim.nF-1,tMin*60/sim.FRAME), f0=Math.min(sim.nF-2,ff|0), a=ff-f0, N=sim.fN, nPer=sim.fPer, kx=S/360, ox=S/2-o.x;
     const cols=[col.fine,col.fine,col.fine,col.mid,col.mid,col.coarse,col.coarse,col.coarse], sz=zm>=8?2.4:1.8;
     ctx.globalAlpha=.7;
     for(let b=0;b<8;b++){ ctx.fillStyle=cols[b];
@@ -559,6 +591,10 @@ function draw(){
         const pxx=kx*x+ox; if(pxx<0||pxx>W)continue; const pyy=Y(y); if(pyy<0||pyy>H)continue; ctx.fillRect(pxx-sz/2,pyy-sz/2,sz,sz); } }
     ctx.globalAlpha=1;
   }
+  if(epa&&$('lyM').checked){ ctx.font='600 10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
+    epa.stations.forEach(st=>{ const x=X(st.lon),y=Y(st.lat); if(x<0||y<0||x>W||y>H)return;
+      ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x+6,y);ctx.lineTo(x,y+6);ctx.lineTo(x-6,y);ctx.closePath();ctx.fillStyle=col.mon;ctx.fill();ctx.lineWidth=1.5;ctx.strokeStyle=col.halo;ctx.stroke();
+      if(zm>=8){ ctx.lineWidth=3;ctx.strokeText(st.id,x+9,y);ctx.fillStyle=col.ink;ctx.fillText(st.id,x+9,y); } }); }
   // towns in the table
   C.RECEPTORS.forEach((r,k)=>{ const x=X(r.lon),y=Y(r.lat); if(x<0||y<0||x>W||y>H)return; const hit=recStats[k]&&recStats[k].any>=0;
     ctx.beginPath();ctx.arc(x,y,k===selRec?5:hit?3.2:2.2,0,7);ctx.fillStyle=k===selRec?col.accent:col.ink;ctx.globalAlpha=hit||k===selRec?1:.55;ctx.fill();ctx.globalAlpha=1;
@@ -574,26 +610,51 @@ function draw(){
 (function ramp(){ const c=$('ramp').getContext('2d'); for(let x=0;x<150;x++){const t=x/149*3,k=Math.min(2,t|0),f=t-k;c.fillStyle='rgb('+[0,1,2].map(n=>Math.round(RAMP[k][n]+f*(RAMP[k+1][n]-RAMP[k][n]))).join(',')+')';c.fillRect(x,0,1,9);} })();
 
 /* ---- model run ---- */
-function params(){ return {top:+$('cTop').value,mmd:+$('cMmd').value,rho:+$('cRho').value,mult:+$('cMult').value,hours:48,nPer:1500,seed:7,dt:50}; }
+function params(){ return {top:+$('cTop').value,mmd:+$('cMmd').value,rho:+$('cRho').value,mult:+$('cMult').value,hours:48,nPer:1500,show:1500,seed:7,dt:50,monitors:epa?epa.stations.map(q=>({lat:q.lat,lon:q.lon})):[]}; }
 function showCtl(){
-  $('vMass').textContent=sig(M)+' kg ('+(M/3200*100).toPrecision(2)*1+'% of about 3,200 kg)';
+  $('vMass').textContent=sig(M)+' kg ('+sig(M/3200*100)+'% of about 3,200 kg)';
   $('vTop').textContent=$('cTop').value+' m'; $('vMmd').textContent=$('cMmd').value+' µm'; $('vMult').textContent='×'+(+$('cMult').value).toFixed(1);
 }
 function msg(t){ $('mapmsg').hidden=!t; $('mapmsg').textContent=t||''; }
-async function run(){
-  if(!met)return; const my=++runId; const s=C.createSim(met,params()); msg('Running particles…');
-  while(!s.done){ s.advance(25); $('prog').style.width=(s.progress*100)+'%'; await new Promise(r=>setTimeout(r)); if(my!==runId)return; }
-  $('prog').style.width='0'; sim=s; msg('');
-  const D=C.DGRID; let i0=D.nx,i1=-1,j0=D.ny,j1=-1;
+const coreSrc=document.getElementById('core').textContent;
+function makeWorker(){ try{ const src=coreSrc+';onmessage=function(e){var d=e.data,s=Core.createSim(d.met,d.prm);while(!s.advance(40))postMessage({id:d.id,p:s.progress});postMessage({id:d.id,done:1,fN:s.fN,fPer:s.fPer,nF:s.nF,FRAME:s.FRAME,fx:s.fx,fy:s.fy,dep:s.dep,depSnap:s.depSnap,recSfc:s.recSfc,recAny:s.recAny,bud:s.bud,cen:s.cen,monAvg:s.monAvg,prm:d.prm},[s.fx.buffer,s.fy.buffer,s.dep.buffer,s.depSnap.buffer,s.bud.buffer,s.cen.buffer]);};';
+  return new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'}))); }catch(e){ return null; } }
+function runPass(nPer){ return new Promise(res=>{ const id=++passId, prm=Object.assign(params(),{nPer});
+  if(worker){worker.terminate();worker=null;} worker=makeWorker();
+  if(!worker){ const s=C.createSim(met,prm); (function step(){ if(id!==passId)return res(null); if(s.advance(25))res(s); else { $('prog').style.width=(s.progress*100)+'%'; setTimeout(step); } })(); return; }
+  worker.onmessage=e=>{ const d=e.data; if(d.id!==passId)return; if(d.done)res(d); else $('prog').style.width=(d.p*100)+'%'; };
+  worker.onerror=()=>{ worker=null; res(null); };
+  worker.postMessage({id,met,prm}); }); }
+function accept(s){
+  sim=s; const D=C.DGRID; let i0=D.nx,i1=-1,j0=D.ny,j1=-1;
   for(let j=0;j<D.ny;j++)for(let i=0;i<D.nx;i++) if(sim.dep[j*D.nx+i]>0){ if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j; }
   bbox=i1<0?null:{i0:Math.max(0,i0-1),i1:Math.min(D.nx-1,i1+1),j0:Math.max(0,j0-1),j1:Math.min(D.ny-1,j1+1)};
-  smFinal=C.smoothLoad(sim.dep); curve=C.areaCurve(smFinal);
-  fits={hi:C.massForArea(curve,C.ARMY.hi.areaMi2*C.MI2,C.ARMY.hi.level),lo:C.massForArea(curve,C.ARMY.lo.areaMi2*C.MI2,C.ARMY.lo.level)};
-  if($('cFit').checked) applyFit();
+  smFinal=C.smoothLoad(sim.dep); curve=C.areaCurve(smFinal); pkLoad=0; for(let c=0;c<smFinal.length;c++) if(smFinal[c]>pkLoad)pkLoad=smFinal[c];
+  const hi=C.massForArea(curve,C.ARMY.hi.areaMi2*C.MI2,C.ARMY.hi.level), lo=C.massForArea(curve,C.ARMY.lo.areaMi2*C.MI2,C.ARMY.lo.level);
+  fits={hi,lo,army:Math.sqrt(hi*lo),epa:null};
+  if(epa&&sim.monAvg&&sim.monAvg.length===epa.stations.length&&epa.tEnd-C.T0>3600e3){ let dm=0,dd=0;
+    epa.stations.forEach((st,k)=>{ dm+=st.dose; const fEnd=Math.min(sim.nF-1,Math.floor((st.tEnd-C.T0)/1000/sim.FRAME)); for(let f=1;f<=fEnd;f++) dd+=sim.monAvg[k][f]*sim.FRAME/60; });
+    if(dd>0) fits.epa=Math.min(3200,Math.max(0.001,dm/dd)); }
+  applyBasis();
   if(firstRun){ firstRun=false; goNow(); }
   summarize(); update();
 }
-function applyFit(){ if(!fits)return; const m=Math.sqrt(fits.hi*fits.lo); if(isFinite(m)&&m>0){ M=Math.min(3200,Math.max(1,m)); $('cMass').value=Math.log10(M); } showCtl(); }
+async function run(){
+  if(!met)return; const my=++runId; msg('Running particles…'); $('refine').hidden=true;
+  let s=await runPass(1500); if(my!==runId)return; if(!s){ msg('The model run failed. Press Refresh now.'); return; }
+  accept(s); msg('');
+  if(worker){ $('refine').hidden=false; s=await runPass(6000); if(my!==runId)return; if(s)accept(s); $('refine').hidden=true; }
+  $('prog').style.width='0';
+}
+let pkLoad=0;
+function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.log10(Math.max(pk,1e-9)))); if(VMAX>500&&VMAX<5000)VMAX=500; VMIN=VMAX/1e4; const tk=v=>String(+v.toPrecision(2)); $('rt0').textContent=tk(VMIN); $('rt1').textContent=tk(VMAX/100); $('rt2').textContent=tk(VMAX); }
+function applyBasis(){
+  if(!fits)return;
+  if(basis==='epa'&&!fits.epa) basis='army';
+  if(basis==='epa') M=fits.epa; else if(basis==='army'&&isFinite(fits.army)&&fits.army>0) M=Math.min(3200,Math.max(0.001,fits.army));
+  $('cMass').value=Math.log10(M); document.querySelectorAll('input[name=basis]').forEach(r=>{ r.checked=r.value===basis; if(r.value==='epa')r.disabled=!fits.epa; });
+  setScale(); showCtl();
+}
 function summarize(){
   if(!sim)return; const nF=sim.nF, D=C.DGRID;
   recStats=C.RECEPTORS.map((r,k)=>{
@@ -611,15 +672,24 @@ function summarize(){
     const pick=()=>selectTown(k); tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
     tb.appendChild(tr); });
   markSel(); townCard();
-  const kv=$('fitKv'); kv.innerHTML=''; const add=(a,b)=>{const dt=document.createElement('dt');dt.textContent=a;const dd=document.createElement('dd');dd.textContent=b;kv.append(dt,dd);};
-  const aHi=C.areaAbove(curve,C.ARMY.hi.level/C.UGFT2/M)/C.MI2, aLo=C.areaAbove(curve,C.ARMY.lo.level/C.UGFT2/M)/C.MI2;
-  add('Area above 100 µg/ft²',aHi.toFixed(0)+' sq mi here, 29 on the Army map');
-  add('Area above 5 µg/ft²',aLo.toFixed(0)+' sq mi here, 186 on the Army map');
-  add('Release that matches each area',sig(fits.hi)+' kg and '+sig(fits.lo)+' kg');
-  let pk=0; for(let c=0;c<smFinal.length;c++) if(smFinal[c]>pk)pk=smFinal[c];
-  add('Highest modeled deposit',sig(pk*M*C.UGFT2)+' µg/ft²');
-  const ratio=fits.hi/fits.lo;
-  $('fitNote').textContent='The Army numbers are from its 8:00 AM CST Nov 25 pre-detonation map, so check the latest Army maps on this page for changes. '+(ratio>0.5&&ratio<2?'The two areas call for about the same release, so the shape of this plume is close to the Army\'s.':'The two areas call for different releases, so this plume is '+(ratio>1?'more spread out':'more concentrated')+' than the Army\'s. Changing the particle size or cloud top moves that.');
+  fitCard();
+}
+function fitCard(){
+  if(!sim||!fits)return;
+  const tb=$('monRows'); tb.innerHTML=''; let post=0,pre=0,nRead=0;
+  if(epa) epa.stations.forEach((st,k)=>{ let mp=0; if(sim.monAvg&&sim.monAvg[k]) for(const v of sim.monAvg[k]) if(v>mp)mp=v; post=Math.max(post,st.peak); pre=Math.max(pre,st.prePeak); nRead+=st.n;
+    const tr=document.createElement('tr'); tr.style.cursor='default'; [st.id,distBear(st.lat,st.lon).km.toFixed(0),st.peak>0?sig(st.peak):'0',mp>0?sig(mp*M):'0'].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);}); tb.appendChild(tr); });
+  else { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=4; td.textContent='EPA monitor readings could not be loaded right now.'; tr.appendChild(td); tb.appendChild(tr); }
+  const army=sig(fits.army)+' kg', e=fits.epa?sig(fits.epa)+' kg':'';
+  $('fitHead').textContent=basis==='epa'?'Scaled to the EPA air monitors, the release is roughly '+e+' of lead. The Army planning map assumed about '+army+'.'
+    :basis==='army'?'Scaled to the Army pre-detonation map, the release is about '+army+' of lead.'+(fits.epa?' The EPA monitors along the path measured far less, consistent with about '+e+'.':'')
+    :'Custom release: '+sig(M)+' kg of lead.'+(fits.epa?' EPA monitors suggest about '+e+', the Army planning map about '+army+'.':'');
+  const aHi=C.areaAbove(curve,C.ARMY.hi.level/C.UGFT2/M)/C.MI2, aLo=C.areaAbove(curve,C.ARMY.lo.level/C.UGFT2/M)/C.MI2, rows=[];
+  if(fits.epa) rows.push(['Release that matches the EPA monitors',e]);
+  rows.push(['Release that matches the Army map',army],['Area above 100 µg/ft² at this release',aHi.toFixed(0)+' sq mi (Army map: 29)'],['Area above 5 µg/ft² at this release',aLo.toFixed(0)+' sq mi (Army map: 186)'],['Highest modeled deposit',sig(pkLoad*M*C.UGFT2)+' µg/ft²']);
+  if(epa) rows.push(['EPA readings used',nRead+' from '+epa.stations.length+' monitors, latest '+fmtCST(epa.tEnd,true)]);
+  kvFill('fitKv',rows);
+  $('fitNote').textContent=(epa?'Model peak is a 15 minute average of fine particles (10 µm and under) near the ground within 3 km of the monitor. '+(pre>=0.3*post&&post>0?'Readings before the detonation were about as high as those after it, so much of what the monitors recorded may be background. ':'')+'The monitors can miss coarse dust that falls near the site and a plume that passes overhead or to one side, so treat the monitor figure as the low case, good to a factor of ten at best, and the Army map as the high case. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map.';
 }
 function markSel(){ document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.k===selRec)); }
 function drawChart(){
@@ -661,7 +731,7 @@ function update(){
 }
 
 /* ---- data freshness ---- */
-function clearAll(text){ met=null; sim=null; recStats=[]; bbox=null; ['sumKv','siteKv','fitKv'].forEach(id=>{$(id).innerHTML='';}); $('rows').innerHTML=''; $('bud').innerHTML=''; $('fitNote').textContent=''; $('sumHead').textContent='No current result'; townCard(); msg(text); draw(); drawChart(); }
+function clearAll(text){ met=null; sim=null; recStats=[]; bbox=null; ['sumKv','siteKv','fitKv'].forEach(id=>{$(id).innerHTML='';}); $('rows').innerHTML=''; $('bud').innerHTML=''; $('fitNote').textContent=''; $('monRows').innerHTML=''; $('fitHead').textContent=''; $('sumHead').textContent='No current result'; townCard(); msg(text); draw(); drawChart(); }
 function setStatus(){
   if(!fetchedAt)return;
   const now=Date.now(), age=Math.round((now-fetchedAt)/60000), pill=$('src');
@@ -671,16 +741,40 @@ function setStatus(){
   const frac=Math.max(0,Math.min(1,(fetchedAt-C.T0)/(48*3600e3))); $('fcfill').style.width=(frac*100)+'%';
   $('fcnote').textContent=frac>=1?'All 48 hours are in the past, so every hour uses the latest analysis from the weather model.':'The first '+(frac*48).toFixed(1)+' h had already happened when the weather was fetched. Everything after is forecast and will shift as it updates.';
 }
+let metAt=0;
+// Shared 10 minute copy first (see api/weather.js), then straight to Open-Meteo.
+async function getMet(url){
+  try{ const pr=await fetch('/api/weather?q='+encodeURIComponent(url.split('?')[1])); if(pr.ok){ const at=+pr.headers.get('x-fetched-at'), j=await pr.json(); if(Array.isArray(j)){ const t=at>0&&at<=Date.now()+60000?Math.min(at,Date.now()):Date.now(); metAt=metAt?Math.min(metAt,t):t; return j; } } }catch(e){}
+  const r=await fetch(url,{cache:'no-store'}); metAt=metAt?Math.min(metAt,Date.now()):Date.now(); if(!r.ok){ let why=''; try{ why=String((await r.json()).reason||''); }catch(e){} const err=new Error(r.status===429?'Open-Meteo is limiting requests from your connection.':'Open-Meteo returned HTTP '+r.status+'.'); err.wait=r.status===429?(/hour/i.test(why)?600000:/day/i.test(why)?3600000:65000):0; throw err; } return r.json(); }
 async function loadMet(){
   if(!met){ $('src').className='pill'; $('src').textContent='Loading weather'; }
   try{
-    const r=await fetch(C.metUrl(),{cache:'no-store'}); if(!r.ok)throw new Error(r.status===429?'Open-Meteo rate limit reached. Wait a minute and try again.':'Open-Meteo returned HTTP '+r.status);
-    const m=C.parseMet(await r.json()); met=m; fetchedAt=Date.now(); failAt=0; setStatus(); update(); run();
+    metAt=0; const m=C.parseMet(await getMet(C.metUrl()));
+    try{ m.nest=C.parseMet(await getMet(C.metUrl(C.NEST,C.NEST_END)),C.NEST,12); }catch(e){ m.nest=null; }
+    met=m; fetchedAt=metAt||Date.now(); failAt=0; setStatus(); update(); return true;
   }catch(e){
     failAt=Date.now();
-    if(!met){ $('src').className='pill bad'; $('src').textContent='No weather data'; $('srcnote').textContent=(e&&e.message||'Could not reach Open-Meteo')+' Nothing is shown without live weather.'; msg('Live weather could not be loaded.'); }
+    if(!met){ $('src').className='pill bad'; $('src').textContent='No weather data'; $('srcnote').textContent=(e&&e.message||'Could not reach Open-Meteo.')+' Nothing is shown without live weather.'; msg('Live weather could not be loaded.'); }
     else setStatus();
+    if(e&&e.wait){ if(!met)$('srcnote').textContent='Open-Meteo is limiting requests from your connection (its free tier allows about eight loads an hour). Trying again automatically in '+(e.wait>120000?Math.round(e.wait/60000)+' minutes.':'about a minute.'); clearTimeout(retryT); retryT=setTimeout(refreshAll,e.wait); }
+    return false;
   }
+}
+// Live readings from the EPA real-time lead monitors. Never kept between refreshes.
+async function loadEPA(){
+  try{
+    const rows=[]; for(let off=0,pg=0;pg<6;pg++,off+=2000){ const r=await fetch(EPA_URL+off,{cache:'no-store'}); if(!r.ok)throw 0; const j=await r.json(); if(!j||!Array.isArray(j.features))throw 0; j.features.forEach(ft=>rows.push(ft.attributes||{})); if(!j.exceededTransferLimit)break; }
+    const by={};
+    rows.forEach(a=>{ const t=+a.Mon_Date_Time, v=+a.Mon_Results, lat=+a.Latitude, lon=+a.Longitude, id=String(a.Air_Station_ID||'').slice(0,12), u=String(a.Mon_Units||'');
+      if(!id||!isFinite(t)||!isFinite(v)||v<0||!isFinite(lat)||!isFinite(lon)||lat<C.GRID.lat0||lat>C.LATMAX||lon<C.GRID.lon0||lon>C.LONMAX||u.indexOf('g/m3')<0)return;
+      (by[id]=by[id]||{id,lat,lon,s:[]}).s.push([t,v]); });
+    const stations=Object.keys(by).sort().map(id=>{ const st=by[id], sr=st.s.sort((a,b)=>a[0]-b[0]); let bs=0,bn=0,prePeak=0,peak=0,dose=0;
+      sr.forEach(q=>{ if(q[0]<C.T0){bs+=q[1];bn++;if(q[1]>prePeak)prePeak=q[1];} }); const base=bn?bs/bn:0;
+      sr.forEach((q,i)=>{ if(q[0]<C.T0)return; if(q[1]>peak)peak=q[1]; const dt=Math.min(15,i+1<sr.length?(sr[i+1][0]-q[0])/60000:5); dose+=Math.max(0,q[1]-base)*dt; });
+      return {id:st.id,lat:st.lat,lon:st.lon,n:sr.length,base,prePeak,peak,dose,tEnd:sr[sr.length-1][0]}; });
+    if(!stations.length)throw 0;
+    epa={stations,tEnd:Math.max.apply(null,stations.map(q=>q.tEnd))};
+  }catch(e){ epa=null; }
 }
 async function loadArmy(){
   const box=$('army'); const fail=()=>{ box.innerHTML=''; const d=document.createElement('div'); d.className='tiny'; d.append('The Army\'s latest maps could not be loaded right now. See them on the '); const a=document.createElement('a'); a.href='https://www.army.mil/asc#org-iowa-army-ammunition-plant'; a.target='_blank'; a.rel='noopener'; a.textContent='Army notification page'; const b=document.createElement('a'); b.href='https://www.dvidshub.net/unit/IAAAP'; b.target='_blank'; b.rel='noopener'; b.textContent='DVIDS'; d.append(a,' or ',b,'.'); box.appendChild(d); $('armyT').textContent=''; };
@@ -697,7 +791,8 @@ async function loadArmy(){
     $('armyT').textContent='checked '+fmtCST(Date.now(),true);
   }catch(e){ fail(); }
 }
-function refreshAll(){ loadMet(); loadArmy(); }
+let refreshing=false, retryT=0;
+async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); if(r[0]) run(); else if(sim){ accept(sim); } }finally{ refreshing=false; } }
 
 /* ---- town selection ---- */
 function durWords(min){ if(min<60)return Math.round(min)+' minutes'; const h=Math.floor(min/60), m=Math.round(min%60); return m?h+' h '+m+' min':h+(h===1?' hour':' hours'); }
@@ -738,10 +833,10 @@ function tick(ts){ if(!playing)return; if(last){ tMin+=(ts-last)/1000*60; if(tMi
 $('play').addEventListener('click',()=>{ playing=!playing; $('play').textContent=playing?'Pause':'Play'; if(playing){ if(tMin>=2880)tMin=0; last=0; requestAnimationFrame(tick);} });
 $('nowBtn').addEventListener('click',()=>{goNow();update();});
 $('time').addEventListener('input',e=>{tMin=+e.target.value;update();});
-['lyP','lyD','lyC','lyW','wlev'].forEach(id=>$(id).addEventListener('change',draw));
+['lyP','lyD','lyC','lyM','lyW','wlev'].forEach(id=>$(id).addEventListener('change',draw));
 let deb=0; ['cTop','cMmd','cRho','cMult'].forEach(id=>$(id).addEventListener('input',()=>{showCtl();clearTimeout(deb);deb=setTimeout(run,300);}));
-$('cMass').addEventListener('input',e=>{ M=Math.pow(10,+e.target.value); $('cFit').checked=false; showCtl(); summarize(); update(); });
-$('cFit').addEventListener('change',e=>{ if(e.target.checked){applyFit();summarize();update();} });
+$('cMass').addEventListener('input',e=>{ M=Math.pow(10,+e.target.value); basis='custom'; applyBasis(); summarize(); update(); });
+document.querySelectorAll('input[name=basis]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; basis=r.value; applyBasis(); summarize(); update(); }));
 $('refresh').addEventListener('click',refreshAll);
 $('aboutBtn').addEventListener('click',()=>$('about').showModal());
 $('about').addEventListener('click',e=>{ if(e.target===$('about'))$('about').close(); });

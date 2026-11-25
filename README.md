@@ -15,10 +15,11 @@ A particle model of where lead dust went after the U.S. Army's controlled detona
 
 ## What it does
 
-- Fetches hourly winds at eight heights, boundary layer height, precipitation, sunlight and cloud cover from [Open-Meteo](https://open-meteo.com/) on a 154-point grid (36.5 to 42.5°N, 96.5 to 88.7°W). Fresh on every load, again every 30 minutes, never cached.
-- Moves 12,000 particles in eight size bins (0.3 to 80 µm) in 50 second steps.
+- Fetches hourly winds at eight heights, boundary layer height, precipitation, sunlight and cloud cover from [Open-Meteo](https://open-meteo.com/) on a 154-point grid (36.5 to 42.5°N, 96.5 to 88.7°W), plus a finer 99-point grid over the first 150 km of the plume track. Fetched on every load and every 30 minutes, through a shared copy at most 10 minutes old.
+- Moves 48,000 particles in eight size bins (0.3 to 80 µm) in 50 second steps, in a background worker. A quick 12,000 particle pass shows first.
 - Settling: Stokes with slip and drag corrections. Turbulent spread: set by Pasquill stability class. Dry deposition: a resistance model. Wet deposition: rain washout.
-- Sets the release amount so the deposition areas match the two contour levels on the Army's pre-detonation map (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²).
+- Reads EPA's four real-time lead monitors along the plume path, live, and scales the release until the modeled fine dust passing them matches what they recorded. On the morning of the detonation that came to roughly 0.4 kg of lead.
+- Can instead scale the release to the Army's pre-detonation map (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²), which implies about 500 kg. The page shows both.
 - Pick any of 41 towns to see when the modeled dust arrives, the peak in the air and what is left on the ground.
 - Shows the Army's newest deposition maps next to the model, read from the plant's public DVIDS feed.
 
@@ -34,7 +35,7 @@ git clone https://github.com/mil-orb/iowa-lead-azide-dispersal
 python -m http.server 8765 --directory iowa-lead-azide-dispersal
 ```
 
-Open http://localhost:8765. The model and the map work from any static server. The small function in `api/` (the Army map feed) only runs on Vercel, so locally that panel shows its fallback links.
+Open http://localhost:8765. The model and the map work from any static server. The two functions in `api/` (the Army map feed and the shared weather copy) only run on Vercel. Locally the Army panel shows its fallback links and weather comes straight from Open-Meteo.
 
 Tests (Node 20 or newer, no packages):
 
@@ -46,12 +47,12 @@ Deploy your own copy with `vercel deploy --prod`.
 
 ## Limits
 
-- Nobody has published how much lead left the site. The release is fitted to the Army's own model, so this says nothing about what was measured.
+- Nobody has published how much lead left the site. The monitor-based figure is good to a factor of ten at best: four points on the ground can miss coarse dust that falls near the site and a plume that passes overhead or to one side. Treat it as the low case and the Army map as the high case.
 - Hours after the fetch time are forecast and will shift.
 - The weather grid is about 50 by 65 km. Terrain, river valleys and local wind shifts are missing.
 - No chemistry, no resuspension of settled dust, no blast or buoyancy model for the first minutes.
 - Town readouts are averages over a 20 km radius and will miss hot spots.
-- Each page load is one large Open-Meteo request. Their free tier allows roughly a dozen loads an hour per visitor.
+- Weather comes through a small function that holds Open-Meteo's answer for 10 minutes, so all visitors share one fetch. When that fails (Open-Meteo often limits Vercel's shared addresses) the browser asks Open-Meteo directly, which allows about one load a minute and eight an hour per visitor. The page retries on its own.
 - Do not use these numbers for health decisions.
 
 ## Credits

@@ -29,8 +29,8 @@ jobs:
       - name: Test
         run: node --version && node --test test/core.test.js
 
-      - name: Function parses
-        run: node --check api/army-maps.js
+      - name: Functions parse
+        run: node --check api/army-maps.js && node --check api/weather.js
 
       # The Vercel link, pulled env files and stored weather must never be committed.
       - name: No personal files
