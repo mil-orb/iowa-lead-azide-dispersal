@@ -194,3 +194,14 @@ test('crosswind spread follows the Draxler (1976) curve', () => {
     assert.ok(Math.abs(sd / draxler - 1) < 0.2, hr + ' h: model ' + sd.toFixed(0) + ' m, Draxler ' + draxler.toFixed(0) + ' m');
   }
 });
+
+test('detonation cloud rise matches the OBODM formula worked by hand', () => {
+  // F = 3 g Hc W / (4 pi rho cp T) = 45,670 m4/s2 for 4,433 kg at 367 cal/g in air of 1.25 kg/m3 and 278 K.
+  // Rise = (8 F / (0.64^3 S))^(1/4) with S = g/T x 3.344e-4 = 586 m.
+  const air = { rho: 1.25, T: 278 };
+  const h = C.cloudRise(4433, 367, air, 0);
+  assert.ok(Math.abs(h - 586.3) < 1, 'got ' + h);
+  assert.ok(Math.abs(C.cloudRise(4433 * 16, 367, air, 0) / h - 2) < 1e-9, 'rise goes as the fourth root of the charge');
+  assert.ok(Math.abs(C.cloudRise(4433, 367, air, 0, 0.1) / h - Math.pow(0.1, 0.25)) < 1e-9, 'heat share enters the same way');
+  assert.ok(C.cloudRise(4433, 367, air, 0.01) < h, 'a stable layer holds the cloud lower');
+});

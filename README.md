@@ -104,7 +104,7 @@ flowchart LR
 
 **How much lead.** Nobody has published the amount released, so the model bounds it three ways and shows all three:
 
-1. **EPA monitors.** The dose the monitors recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors. This is a limit, and it is repeated with the detonation point moved 3 km in four directions because that point is not public.
+1. **EPA monitors.** The dose the monitors recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram at the same monitors. This is a limit, and it is repeated with the detonation point moved 3 km in four directions, and to one more candidate point for the magazine taken from another public simulator, because that point is not public.
 2. **Army planning map.** The release at which modeled deposition covers the same areas as the map's two contours (29 sq mi above 100 µg/ft², 186 sq mi above 5 µg/ft²). This is the high case and the default.
 3. **1977 reference.** The 25% airborne fraction from an unmitigated detonation the Army cited.
 

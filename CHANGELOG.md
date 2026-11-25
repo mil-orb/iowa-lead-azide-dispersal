@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 (2026-11-25)
+
+- Added the OBODM detonation cloud rise formula (User's Guide Vol. II, Eqs. 2-7 and 2-8) with a hand-worked test. The assumptions panel shows what it gives for an open detonation and for 90% and 99% of the heat lost to the cover. The default cloud top is unchanged.
+- The EPA monitor limit is also worked for one more candidate detonation point, 40.79056°N 91.24472°W, which another public simulator attributes to a court record. That attribution is unchecked.
+- Method notes say the barrels were in two magazines and that the model uses one point.
+
 ## 2.0.0 (2026-11-25)
 
 Reframed after a reader's criticism that the page presented an assumed release as if it had happened.

@@ -7,3 +7,6 @@ node_modules/
 *.bak
 *.bak.html
 .claude/
+
+epa-stations-map.png
+plume-earth-epa-stations.png
