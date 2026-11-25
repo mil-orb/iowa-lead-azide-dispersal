@@ -37,6 +37,8 @@ python -m http.server 8765
 - Deposition is shown in µg/ft² because the Army maps use it.
 - The default release is fitted to EPA's live monitor readings (`loadEPA`, `accept`). Never store those readings. If the feed fails, the page falls back to the Army map fit and says so.
 - The model run happens in a Web Worker built from the core script's text, so the core must stay free of DOM access and of anything defined outside it.
+- A physics change needs an analytic test or a published curve to compare against, in `test/core.test.js`. Do not tune a constant to make the map look right.
+- Report the EPA comparison as an upper limit with its noise. Never present it as a measured release.
 - The Army contour areas in `ARMY` come from one dated map. If you change them, change the date in the UI text too.
 
 ## Recipes

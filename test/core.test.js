@@ -97,3 +97,48 @@ test('the fine grid overrides the wide grid where it covers', () => {
   assert.ok(C.sample(wide, C.SRC.lon, C.SRC.lat, 10, 30, o));
   assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'after the fine grid ends the wide one takes over');
 });
+
+// ---- analytic checks ----
+const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+
+test('a dust layer mixes to an even profile and stays even', () => {
+  // 0.3 micron particles barely settle or deposit, so only mixing and reflection act on them.
+  for (const top of [600, 60]) {
+    const sim = run(C.parseMet(fakeWeather()), { top, hours: 6, nPer: 3000, dt: 50 });
+    const { z, alive } = sim.state();
+    const zs = []; for (let i = 0; i < 3000; i++) if (alive[i]) zs.push(z[i]);
+    assert.ok(zs.length > 2900, 'almost none of the finest particles are lost');
+    const m = mean(zs), low = zs.filter((v) => v < 150).length / zs.length, high = zs.filter((v) => v > 450).length / zs.length;
+    assert.ok(Math.abs(m - 300) < 15, 'mean height is mid layer (600 m boundary layer), got ' + m.toFixed(0) + ' from a ' + top + ' m start');
+    assert.ok(Math.abs(low - 0.25) < 0.03 && Math.abs(high - 0.25) < 0.03, 'a quarter sits in each outer quarter, got ' + low.toFixed(3) + ' and ' + high.toFixed(3));
+  }
+});
+
+test('airborne mass decays at the rate settling and deposition imply', () => {
+  // 10 micron lead oxide in a 600 m mixed layer. If the layer stayed perfectly mixed, the airborne share
+  // would fall as exp(-(vs + vd) t / h). Real mixing lags a little near the ground, so the model may keep
+  // slightly more aloft, never less.
+  const hours = 2, nPer = 4000, h = 600, U10 = 6;
+  const sim = run(C.parseMet(fakeWeather({ speed: U10 })), { top: h, hours, nPer, dt: 50 });
+  const { m } = sim.state();
+  const bin = C.DIAM.indexOf(10), frac = C.binFractions(25, 2.5)[bin];
+  let left = 0; for (let i = bin * nPer; i < (bin + 1) * nPer; i++) left += m[i];
+  const got = left / frac, vs = C.settle(10, 9500), vd = C.vdTurb(10, vs, 0.0869 * U10);
+  const ideal = Math.exp(-(vs + vd) * hours * 3600 / h);
+  assert.ok(got >= ideal - 0.02 && got <= ideal + 0.15, 'airborne share ' + got.toFixed(3) + ' against well-mixed ' + ideal.toFixed(3));
+});
+
+test('crosswind spread follows the Draxler (1976) curve', () => {
+  // Wind from the north at 6 m/s, class D: sigma_v = 0.18 * 6. Draxler: sigma_y = sigma_v t / (1 + 0.9 sqrt(t / 1000 s)).
+  const U10 = 6, nPer = 3000;
+  const sim = C.createSim(C.parseMet(fakeWeather({ dir: 0, speed: U10 })), { top: 100, mmd: 25, rho: 9500, mult: 1, hours: 3, nPer, seed: 11, dt: 50 });
+  while (!sim.advance(500));
+  const sv = 0.18 * U10, cos = Math.cos(C.SRC.lat * Math.PI / 180);
+  for (const hr of [1, 2, 3]) {
+    const f = hr * 4, xs = [];
+    for (let j = 0; j < sim.fPer; j++) { const x = sim.fx[f * sim.fN + j]; if (x === x) xs.push((x - C.SRC.lon) * C.R * cos); } // finest bin
+    const mu = mean(xs), sd = Math.sqrt(mean(xs.map((v) => (v - mu) * (v - mu))));
+    const t = hr * 3600, draxler = sv * t / (1 + 0.9 * Math.sqrt(t / 1000));
+    assert.ok(Math.abs(sd / draxler - 1) < 0.2, hr + ' h: model ' + sd.toFixed(0) + ' m, Draxler ' + draxler.toFixed(0) + ' m');
+  }
+});

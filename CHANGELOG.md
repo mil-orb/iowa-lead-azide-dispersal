@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 (2026-11-25)
+
+Physics and statistics audit.
+
+- Turbulence now scales with the 10 m wind instead of the wind at particle height. The class intensities are surface values, and for class D they equal 2.0 and 1.3 times the friction velocity.
+- Horizontal memory time changed from 1,000 s to 330 s. Crosswind spread was about 55% wider than Draxler's 1976 curve and is now within 7% between one and three hours.
+- The EPA monitor fit is reported as an upper limit with its noise, and no longer clips negative differences (which had biased it upward).
+- A town counts as reached at one ten-thousandth of the release airborne within 20 km, so the answer no longer depends on particle count.
+- New analytic tests: even vertical mixing, exponential decay of airborne mass, and crosswind spread.
+
 ## 1.1.0 (2026-11-25)
 
 - Release is now scaled to EPA's live air monitor readings by default, with the Army map fit kept as the high case.
