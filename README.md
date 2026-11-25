@@ -51,7 +51,7 @@ Two things it found on the day:
 |---|---|
 | **Check a town** | Pick any of 61 towns from Iowa to the Gulf coast. See when the modeled dust arrives, the peak in the air, how much of that is PM10-size, and what is left on the ground. |
 | **Play the timeline** | Scrub or play 48 hours. Watch coarse dust fall out and fine dust keep going. |
-| **See EPA's readings** | A table and chart for each of EPA's four real-time lead monitors, read live. The reading nearest the displayed time shows beside each monitor on the map. All 43 of EPA's listed sampling stations are drawn. |
+| **See EPA's readings** | A table and chart for each of EPA's four real-time lead monitors, read live. The reading nearest the displayed time shows beside each monitor on the map. All 43 of EPA's listed sampling stations are drawn, in the colours of EPA's own legend (monitor squares green under 32 µg/m³, yellow at or above). |
 | **Compare with the Army** | The Army's newest deposition maps load next to the model, and the model's deposition is scored against the Army's two contour areas. |
 | **Check the forecast** | The model's wind is compared with National Weather Service observations at eight airports for the hours already past. |
 | **Change the assumptions** | Release amount, cloud height, particle size, material and turbulence are all adjustable. |

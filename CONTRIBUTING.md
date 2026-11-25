@@ -41,6 +41,7 @@ The model lives in `<script id="core">` in `index.html` and has no DOM access, s
 
 - Never bundle or store weather or EPA readings. The page shows current data, with its time, or nothing.
 - EPA's readings are shown as published, with nothing applied to them.
+- EPA station colours follow EPA's legend exactly: one split at 32 µg/m³ for monitors, instrument type for the rest. Do not add classes EPA does not use.
 - Report the monitor comparison as a limit with its noise. Never present it as a measured release.
 - No thresholds or advice of our own. An agency's level may be quoted with attribution, as the page does for EPA's screening level and the Army's map legend.
 - The page must keep saying it is an estimate and keep the EPA and Army links at the top.

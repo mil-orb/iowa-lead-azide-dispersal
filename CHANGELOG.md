@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0 (2026-11-25)
+
+- EPA stations are coloured by EPA's own legend, copied from its data viewer: monitor squares green under 32 µg/m³ and yellow at 32 µg/m³ or more, sampling stations in its two instrument colours. No other exposure classes are added.
+
 ## 1.7.0 (2026-11-25)
 
 - All of EPA's listed air sampling stations are drawn on the map, read live from its location layer. Stations without published readings are marked as such.

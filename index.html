@@ -121,7 +121,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .basis label.chip:has(input:checked){background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:var(--accent)}
 .basis input{accent-color:var(--accent)}
 .dia{display:inline-block;width:7px;height:7px;background:var(--halo);border:1.5px solid var(--ink);transform:rotate(45deg);margin-right:7px;vertical-align:0}
-.dia.sm{width:5px;height:5px;border-color:var(--arrow)}
+.sq{display:inline-block;width:10px;height:10px;border:1.5px solid #16212b;margin-right:6px;vertical-align:-1px}
+.sq.hollow{background:var(--halo);border-color:var(--ink)}
+td .sq{margin-right:7px}
 .hbtns{display:flex;gap:8px;align-items:center}
 .gh{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:5px 11px;color:var(--ink);text-decoration:none;background:var(--panel)}
 .gh:hover{border-color:var(--accent)} .gh svg{width:16px;height:16px;fill:currentColor}
@@ -179,8 +181,11 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
             <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
             <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
             <span>lead on the ground, µg/ft²</span>
-            <span><i class="dia"></i>EPA monitor with live readings</span>
-            <span><i class="dia sm"></i>EPA station, no published readings</span>
+            <span><i class="sq" style="background:#59ff00"></i>EPA monitor reading under 32 µg/m³</span>
+            <span><i class="sq" style="background:#ffee00"></i>32 µg/m³ or more</span>
+            <span><i class="sq hollow"></i>no reading at this time</span>
+            <span><i class="dot" style="background:#149ece"></i>EPA station with dust and gas meters</span>
+            <span><i class="dot" style="background:#e500ff"></i>EPA station, lab samples only</span>
             <span><i class="ln"></i>100 µg/ft²</span><span><i class="ln dash"></i>5 µg/ft²</span>
           </div>
         </div>
@@ -216,7 +221,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
         <p class="tiny" id="sitesNote" style="margin:8px 0 0"></p>
         <canvas id="monChart" aria-label="Measured lead in air at the selected EPA monitor, with the model for comparison"></canvas>
         <div class="tiny" id="monCap"></div>
-        <p class="tiny" style="margin:8px 0 0">These are EPA's own real-time readings of lead in air, read live from its <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data viewer</a>. They are the only measurements on this page. Click a row or a diamond on the map to chart a monitor. On the map, the number beside each diamond is the reading nearest the time shown.</p>
+        <p class="tiny" style="margin:8px 0 0">Colours follow EPA's own legend. Its viewer draws each monitor as a square in one of two classes, under 32 µg/m³ or 32 µg/m³ and over, and that is the only exposure level it uses. EPA describes 32 µg/m³ as "a short-term air screening level for lead" from the Department of Energy's Protective Action Criteria-1. The round markers are EPA's other sampling stations in its instrument colours. They have no published readings, so their colour says what equipment is there and nothing about lead.</p>
+        <p class="tiny" style="margin:8px 0 0">These are EPA's own real-time readings of lead in air, read live from its <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data viewer</a>. They are the only measurements on this page. Click a row or a square on the map to chart a monitor. On the map, the number beside each square is the reading nearest the time shown, and the square takes that reading's colour.</p>
       </div>
 
       <div class="panel">
@@ -682,12 +688,12 @@ function draw(){
   }
   if(sites&&$('lyM').checked){ ctx.font='10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
     sites.forEach((q,k)=>{ if(q.live)return; const x=X(q.lon),y=Y(q.lat); if(x<0||y<0||x>W||y>H)return; const r=k===selSite?5:3.2;
-      ctx.beginPath();ctx.moveTo(x,y-r);ctx.lineTo(x+r,y);ctx.lineTo(x,y+r);ctx.lineTo(x-r,y);ctx.closePath();ctx.fillStyle=col.halo;ctx.globalAlpha=.85;ctx.fill();ctx.globalAlpha=1;ctx.lineWidth=1.2;ctx.strokeStyle=col.arrow;ctx.stroke();
+      ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=siteColor(q.type);ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle=col.halo;ctx.stroke();
       if(zm>=9.5||k===selSite){ ctx.lineWidth=3;ctx.strokeStyle=col.halo;ctx.strokeText(q.id,x+7,y);ctx.fillStyle=col.ink;ctx.fillText(q.id,x+7,y); } }); }
   if(epa&&$('lyM').checked){ ctx.font='600 10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
     epa.stations.forEach(st=>{ const x=X(st.lon),y=Y(st.lat); if(x<0||y<0||x>W||y>H)return;
-      ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x+6,y);ctx.lineTo(x,y+6);ctx.lineTo(x-6,y);ctx.closePath();ctx.fillStyle=col.halo;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col.ink;ctx.stroke(); // hollow and neutral: the colour carries no reading
-      if(zm>=7.5||epa.stations.indexOf(st)===selMon){ const v=readingAt(st,C.T0+tMin*60000), t=st.id+(v==null?'':': '+(v===0?'0':sig(v))); ctx.lineWidth=3;ctx.strokeStyle=col.halo;ctx.strokeText(t,x+9,y);ctx.fillStyle=col.ink;ctx.fillText(t,x+9,y); } }); }
+      const cl=epaClass(readingAt(st,C.T0+tMin*60000)); ctx.beginPath();ctx.rect(x-6,y-6,12,12);ctx.fillStyle=cl||col.halo;ctx.fill();ctx.lineWidth=cl?1.5:2;ctx.strokeStyle=cl?'#16212b':col.ink;ctx.stroke(); // EPA's square, in EPA's class colour. Hollow when there is no reading near this time
+      if(zm>=7.5||epa.stations.indexOf(st)===selMon){ const v=readingAt(st,C.T0+tMin*60000), t=st.id+(v==null?'':': '+(v===0?'0':sig(v))); ctx.lineWidth=3;ctx.strokeStyle=col.halo;ctx.strokeText(t,x+10,y);ctx.fillStyle=col.ink;ctx.fillText(t,x+10,y); } }); }
   // towns in the table
   C.RECEPTORS.forEach((r,k)=>{ const x=X(r.lon),y=Y(r.lat); if(x<0||y<0||x>W||y>H)return; const hit=recStats[k]&&recStats[k].any>=0;
     ctx.beginPath();ctx.arc(x,y,k===selRec?5:hit?3.2:2.2,0,7);ctx.fillStyle=k===selRec?col.accent:col.ink;ctx.globalAlpha=hit||k===selRec?1:.55;ctx.fill();ctx.globalAlpha=1;
@@ -761,6 +767,11 @@ async function run(){
   $('prog').style.width='0';
 }
 let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null, selMon=-1, sites=null, selSite=-1;
+// EPA's own legend, copied from the web map behind its data viewer: monitor squares in two classes split at 32 µg/m³
+// (the DOE Protective Action Criteria-1 level EPA quotes), and sampling stations coloured by instrument type.
+const EPA_LEVEL=32, EPA_BELOW='#59ff00', EPA_ABOVE='#ffee00', EPA_METERS='#149ece', EPA_LAB='#e500ff';
+function epaClass(v){ return v==null?null:(v>=EPA_LEVEL?EPA_ABOVE:EPA_BELOW); }
+function siteColor(type){ return /dust\s*trak|arearae/i.test(type)?EPA_METERS:/cassette|summa/i.test(type)?EPA_LAB:'#9aa5af'; }
 const SITES_URL='https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services/Air_Sampling_and_Monitoring_Location/FeatureServer/0/query?where=1%3D1&outFields=Station_ID,Instrument_Type&outSR=4326&f=json';
 function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.log10(Math.max(pk,1e-9)))); if(VMAX>500&&VMAX<5000)VMAX=500; VMIN=VMAX/1e4; const tk=v=>String(+v.toPrecision(2)); $('rt0').textContent=tk(VMIN); $('rt1').textContent=tk(VMAX/100); $('rt2').textContent=tk(VMAX); }
 function applyBasis(){
@@ -806,7 +817,7 @@ async function loadSites(){
 function markSites(){ if(!sites)return; const live={}; if(epa) epa.stations.forEach(st=>{ live[String(st.id).replace(/[^A-Za-z0-9]/g,'').toUpperCase()]=1; }); sites.forEach(q=>{ q.live=!!live[q.key]; }); }
 function sitesNote(){
   const el=$('sitesNote'); if(!el)return; if(!sites){ el.textContent=''; return; } markSites();
-  const n=sites.length, live=sites.filter(q=>q.live).length; let t='EPA lists '+n+' air sampling stations around the plant. '+live+' of them publish live readings. The other '+(n-live)+' are the small diamonds on the map. EPA has not published results for them: they use filter cassettes and canisters that go to a lab, and dust and gas meters whose data is not posted.';
+  const n=sites.length, live=sites.filter(q=>q.live).length; let t='EPA lists '+n+' air sampling stations around the plant. '+live+' of them publish live readings. The other '+(n-live)+' are the round markers on the map. EPA has not published results for them: they use filter cassettes and canisters that go to a lab, and dust and gas meters whose data is not posted.';
   if(selSite>=0&&sites[selSite]) t=sites[selSite].id+': '+(sites[selSite].type||'instrument type not listed')+'. '+distBear(sites[selSite].lat,sites[selSite].lon).km.toFixed(0)+' km from the site. No published readings. '+t;
   el.textContent=t;
 }
@@ -816,6 +827,7 @@ function epaCard(){
   let n=0,z=0,pk=0,pkS=null; epa.stations.forEach((st,k)=>{ n+=st.nAll; z+=st.zeros; if(st.pkAll>pk){pk=st.pkAll;pkS=st;}
     const tr=document.createElement('tr'); tr.tabIndex=0; tr.dataset.m=k; if(k===selMon)tr.className='sel';
     [st.id,distBear(st.lat,st.lon).km.toFixed(0),String(st.nAll),String(st.zeros),st.pkAll>0?sig(st.pkAll):'0',st.pkAll>0?fmtCST(st.pkT,true):''].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);});
+    { const sw=document.createElement('i'); sw.className='sq'; sw.style.background=epaClass(st.pkAll)||'transparent'; sw.title=st.pkAll>=EPA_LEVEL?'Highest reading is 32 µg/m³ or more':'Highest reading is under 32 µg/m³'; tr.firstChild.prepend(sw); }
     const pick=()=>{ selMon=k; epaCard(); draw(); }; tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}}); tb.appendChild(tr); });
   if(selMon<0||selMon>=epa.stations.length){ selMon=pkS?epa.stations.indexOf(pkS):0; document.querySelectorAll('#epaRows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.m===selMon)); }
   { const age=Math.round((Date.now()-epa.tEnd)/60000); $('epaT').textContent='latest reading '+fmtCST(epa.tEnd,true)+(age>20?' ('+(age>=120?Math.round(age/60)+' h':age+' min')+' ago; EPA has posted nothing newer)':''); }
