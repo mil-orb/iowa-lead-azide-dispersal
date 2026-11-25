@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this model, please cite it as below, and cite Open-Meteo for the weather data."
+title: "Iowa Lead Azide Detonation Dispersal Simulator"
+type: software
+authors:
+  - name: "mil-orb"
+repository-code: "https://github.com/mil-orb/iowa-lead-azide-dispersal"
+url: "https://iowa-lead-azide-dispersal.vercel.app"
+license: MIT
+version: "1.3.0"
+date-released: "2026-11-25"

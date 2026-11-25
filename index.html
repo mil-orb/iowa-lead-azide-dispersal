@@ -144,6 +144,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
     <span class="pill" id="src">Loading weather</span>
     <span id="srcnote"></span>
     <button id="refresh" type="button">Refresh now</button>
+    <a class="tiny" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>
     <span class="tiny" id="refine" hidden>Refining with 48,000 particles…</span>
   </div>
   <div id="prog"></div>
@@ -264,16 +265,17 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
     <ul>
       <li><b>Weather.</b> Hourly Open-Meteo data (NOAA HRRR and GFS) on a 0.6° grid of 154 points from 36.5 to 42.5°N and 96.5 to 88.7°W, plus a 0.2° grid of 99 points over the first 150 km of the plume track for the first 12 hours: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. It is fetched on every load and every 30 minutes after, through a shared copy that is at most 10 minutes old, and the page shows the fetch time. If refreshing fails for 90 minutes the page hides the result.</li>
       <li><b>Particles.</b> 48,000 model particles in eight size bins (a quick 12,000 particle pass shows first) from 0.3 to 80 µm, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top and move in 50 second steps with wind interpolated in space, height and time.</li>
-      <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction and a Schiller-Naumann drag correction for the larger sizes. For lead oxide that is about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm.</li>
-      <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point from 10 m wind, sunlight and cloud cover (Turner's method). The class gives turbulence intensity, which is multiplied by the 10 m wind. For class D that equals the standard neutral surface-layer values (2.0 and 1.3 times the friction velocity). Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
-      <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
-      <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second.</li>
+      <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction (Seinfeld and Pandis 2016) and a Schiller-Naumann drag correction for the larger sizes. For lead oxide that is about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm.</li>
+      <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point from 10 m wind, sunlight and cloud cover (Turner's method). The class gives turbulence intensity (Gifford 1976), which is multiplied by the 10 m wind. For class D that works out to about 2.1 and 1.0 times the friction velocity, close to the ratios usually quoted for a neutral surface layer. Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
+      <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (Slinn 1982, as given by Seinfeld and Pandis 2016: aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
+      <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second (Baklanov and Sørensen 2001). That rate was derived for particles under 2.8 µm and is applied here to every size, so washout of coarse dust is understated.</li>
       <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
       <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours.</li>
       <li><b>Checks.</b> Automated tests confirm that mass is conserved, that settling speeds match hand calculations, that a dust layer mixes to an even profile and stays even, that airborne mass decays at the rate the settling and deposition speeds imply, and that crosswind spread follows Draxler's curve within 20%. On the Nov 25 weather the modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
       <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released lead is airborne within 20 km of it. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
       <li><b>Weak points.</b> Hours after the fetch time are forecast. The weather grid is about 50 by 65 km, so terrain, river valleys and local wind shifts are missing. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
     </ul>
+    <p>Full references for every formula and constant are in the <a href="https://github.com/mil-orb/iowa-lead-azide-dispersal#references" target="_blank" rel="noopener">project README</a>.</p>
     <p>Official sources: <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">EPA data dashboard</a>, <a href="https://response.epa.gov/site/site_profile.aspx?site_id=17211" target="_blank" rel="noopener">EPA response site and emergency permit</a>, <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant" target="_blank" rel="noopener">Army notifications</a>, <a href="https://www.dvidshub.net/unit/IAAAP" target="_blank" rel="noopener">Army map archive on DVIDS</a>, <a href="https://www.epa.gov/lead/actions-reduce-potential-lead-exposure" target="_blank" rel="noopener">EPA on reducing lead exposure</a>, <a href="https://hhs.iowa.gov/health-prevention/environmental-health/lead-exposure-surveillance" target="_blank" rel="noopener">Iowa HHS lead page</a>. Weather from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
   </details>
 
@@ -305,6 +307,8 @@ const H_START='2026-11-25T14:00', H_END='2026-11-27T16:00';
 // Fine grid over the first 150 km of the plume track, for the first 12 hours.
 const NEST={lat0:39.6,dlat:0.2,ny:9,lon0:-92.8,dlon:0.2,nx:11}, NEST_END='2026-11-26T03:00';
 const DIAM=[0.3,1,2.5,5,10,20,40,80];
+// Lateral intensities are Gifford's (1976) sigma-theta of 25, 20, 15, 10, 5 and 2.5 degrees in radians. Vertical ones are
+// about half of those, a common rule of thumb with no single source; for class D they give sigma_w of about 1.0 u*.
 const IY=[0.44,0.36,0.27,0.18,0.09,0.045], IZ=[0.21,0.17,0.13,0.09,0.06,0.035];
 const DGRID={d:0.02,nx:Math.round((LONMAX-GRID.lon0)/0.02),ny:Math.round((LATMAX-GRID.lat0)/0.02)};
 const SNAP=[0,0.25,0.5,0.75,1,1.5,2,3,4,5,6,8,10,12,15,18,21,24,30,36,42,48];
@@ -455,7 +459,7 @@ function createSim(met,prm){
   const dep=new Float64Array(nc), depSnap=keep?new Float32Array(SNAP.length*nc):null;
   const recSfc=RECEPTORS.map(()=>new Float32Array(nF)),recAny=RECEPTORS.map(()=>new Float32Array(nF));
   const bud=new Float32Array(nF*4), cen=new Float32Array(nF*3); let dry=0,wet=0,exited=0,step=0,snapI=0;
-  const TLH=prm.tlh||330; // s. Chosen so crosswind spread follows Draxler (1976), Ti = 1000 s, between 1 and 3 hours
+  const TLH=prm.tlh||330; // s. Chosen so crosswind spread follows Draxler (1976, Atmos. Environ. 10, 99-105), Ti = 1000 s, between 1 and 3 hours
   const a=Math.exp(-DT/TLH), bq=Math.sqrt(1-a*a), o={};
   function deposit(lon,lat,kg,isWet){
     const i=Math.min(DGRID.nx-1,Math.max(0,((lon-GRID.lon0)/DGRID.d)|0)), j=Math.min(DGRID.ny-1,Math.max(0,((lat-GRID.lat0)/DGRID.d)|0));
@@ -494,7 +498,7 @@ function createSim(met,prm){
         if(z2<=0){ deposit(x[i],y[i],m[i],false); m[i]=0; alive[i]=0; continue; }
         z[i]=z2;
         if(nM&&pm10[b]&&z2<MONH){ for(let k=0;k<nM;k++){ const dx=(x[i]-mons[k].lon)*R*monCos[k], dy=(y[i]-mons[k].lat)*R; if(dx*dx+dy*dy<MONR*MONR) monAcc[k]+=m[i]*DT; } }
-        if(o.p>0){ const l=m[i]*(1-Math.exp(-8.4e-5*Math.pow(o.p,0.79)*DT)); m[i]-=l; deposit(x[i],y[i],l,true); }
+        if(o.p>0){ const l=m[i]*(1-Math.exp(-8.4e-5*Math.pow(o.p,0.79)*DT)); /* Baklanov and Sorensen (2001), their fit for particles under 2.8 microns */ m[i]-=l; deposit(x[i],y[i],l,true); }
       }
       step++;
       if(Math.round(step*DT)%FRAME===0) record();

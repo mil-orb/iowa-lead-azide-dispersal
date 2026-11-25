@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 (2026-11-25)
+
+- References for every formula and constant in the README, with the project's own unsourced choices listed separately.
+- Citations in the page's method notes and in code comments. Open-Meteo attribution next to the weather status.
+- Corrected the page's claim about neutral turbulence ratios, and noted that the rain washout rate is applied outside the particle sizes it was fitted for.
+- CITATION.cff.
+
 ## 1.2.0 (2026-11-25)
 
 Physics and statistics audit.
