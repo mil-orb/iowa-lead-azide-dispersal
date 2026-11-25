@@ -112,6 +112,7 @@ h2{font-size:1rem}
 .town .big{font-size:1.15rem;margin-top:12px}
 .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 #chart{height:110px;margin-top:12px}
+#monChart{display:block;width:100%;height:140px;margin-top:10px}
 .sub-d{margin-top:10px;border-top:1px solid var(--line);padding-top:8px} .sub-d summary{font-family:var(--f-body);font-weight:500;font-size:.86rem;color:var(--muted)}
 details.panel>summary{font-size:1rem}
 tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
@@ -204,6 +205,18 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       </div>
 
       <div class="panel">
+        <h2>What EPA's air monitors measured <span class="tiny" id="epaT"></span></h2>
+        <p class="big" id="epaHead">Loading EPA readings.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Monitor</th><th>km from site</th><th>Readings</th><th>At zero</th><th>Highest, µg/m³</th><th>When</th></tr></thead>
+          <tbody id="epaRows"></tbody>
+        </table></div>
+        <canvas id="monChart" aria-label="Measured lead in air at the selected EPA monitor, with the model for comparison"></canvas>
+        <div class="tiny" id="monCap"></div>
+        <p class="tiny" style="margin:8px 0 0">These are EPA's own real-time readings of lead in air, read live from its <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">public data viewer</a>. They are the only measurements on this page. Click a row or a diamond on the map to chart a monitor. On the map, the number beside each diamond is the reading nearest the time shown.</p>
+      </div>
+
+      <div class="panel">
         <h2>The plume at this time <span class="tiny" id="sumT"></span></h2>
         <p class="big" id="sumHead">Running model</p>
         <dl class="kv" id="sumKv"></dl>
@@ -282,7 +295,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point. By day it comes from 10 m wind and solar radiation (the EPA solar radiation method, EPA-454/R-99-005 Table 6-7). At night it comes from 10 m wind and cloud cover (Turner's key in the same report). Turner's overcast rule needs a cloud ceiling, which is not available, so an overcast night is treated as cloudy. The class gives turbulence intensity (Gifford 1976), which is multiplied by the 10 m wind. For class D that works out to about 2.1 and 1.0 times the friction velocity, close to the ratios usually quoted for a neutral surface layer. Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
       <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (Slinn 1982, as given by Seinfeld and Pandis 2016: aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
       <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second (Baklanov and Sørensen 2001). That rate was derived for particles under 2.8 µm and is applied here to every size, so washout of coarse dust is understated.</li>
-      <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
+      <li><b>Measurements.</b> The card "What EPA's air monitors measured" shows EPA's readings as published, with nothing applied to them. EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
       <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours. The Army map's two contour levels are the ones its legend calls EPA's limits for lead dust on window sills (100 µg/ft²) and floors (5 µg/ft²). For scale, mixed through the top 2 inches of soil (the depth the Army's sampling plan uses), 100 µg/ft² adds about 0.02 parts per million of lead. The Army's stated soil cleanup level is 200 parts per million.</li>
       <li><b>Checks.</b> Automated tests confirm that mass is conserved, that settling speeds match hand calculations, that a dust layer mixes to an even profile and stays even, that airborne mass decays at the rate the settling and deposition speeds imply, and that crosswind spread follows Draxler's curve within 20%. On the Nov 25 weather the modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
       <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released PM10-size dust is airborne within 20 km of it, at any height. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
@@ -667,7 +680,7 @@ function draw(){
   if(epa&&$('lyM').checked){ ctx.font='600 10px Inter,sans-serif';ctx.textAlign='left';ctx.textBaseline='middle';
     epa.stations.forEach(st=>{ const x=X(st.lon),y=Y(st.lat); if(x<0||y<0||x>W||y>H)return;
       ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x+6,y);ctx.lineTo(x,y+6);ctx.lineTo(x-6,y);ctx.closePath();ctx.fillStyle=col.halo;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=col.ink;ctx.stroke(); // hollow and neutral: the colour carries no reading
-      if(zm>=8){ ctx.lineWidth=3;ctx.strokeText(st.id,x+9,y);ctx.fillStyle=col.ink;ctx.fillText(st.id,x+9,y); } }); }
+      if(zm>=7.5||epa.stations.indexOf(st)===selMon){ const v=readingAt(st,C.T0+tMin*60000), t=st.id+(v==null?'':': '+(v===0?'0':sig(v))); ctx.lineWidth=3;ctx.strokeStyle=col.halo;ctx.strokeText(t,x+9,y);ctx.fillStyle=col.ink;ctx.fillText(t,x+9,y); } }); }
   // towns in the table
   C.RECEPTORS.forEach((r,k)=>{ const x=X(r.lon),y=Y(r.lat); if(x<0||y<0||x>W||y>H)return; const hit=recStats[k]&&recStats[k].any>=0;
     ctx.beginPath();ctx.arc(x,y,k===selRec?5:hit?3.2:2.2,0,7);ctx.fillStyle=k===selRec?col.accent:col.ink;ctx.globalAlpha=hit||k===selRec?1:.55;ctx.fill();ctx.globalAlpha=1;
@@ -740,7 +753,7 @@ async function run(){
   else if(!ensNA){ ensNA=true; summarize(); }
   $('prog').style.width='0';
 }
-let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null;
+let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null, selMon=-1;
 function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.log10(Math.max(pk,1e-9)))); if(VMAX>500&&VMAX<5000)VMAX=500; VMIN=VMAX/1e4; const tk=v=>String(+v.toPrecision(2)); $('rt0').textContent=tk(VMIN); $('rt1').textContent=tk(VMAX/100); $('rt2').textContent=tk(VMAX); }
 function applyBasis(){
   if(!fits)return;
@@ -768,7 +781,41 @@ function summarize(){
     const pick=()=>selectTown(k); tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
     tb.appendChild(tr); });
   markSel(); townCard();
-  fitCard();
+  fitCard(); epaCard();
+}
+// Reading nearest a time, if one exists within 8 minutes.
+function readingAt(st,t){ const a=st.series; if(!a||!a.length)return null; let lo=0,hi=a.length-1; while(lo<hi){ const m=(lo+hi)>>1; if(a[m][0]<t)lo=m+1; else hi=m; }
+  let b=lo; if(lo>0&&Math.abs(a[lo-1][0]-t)<Math.abs(a[lo][0]-t))b=lo-1; return Math.abs(a[b][0]-t)<=8*60000?a[b][1]:null; }
+function epaCard(){
+  const tb=$('epaRows'); tb.innerHTML='';
+  if(!epa){ $('epaHead').textContent='EPA monitor readings could not be loaded right now.'; $('epaT').textContent=''; drawMon(); return; }
+  let n=0,z=0,pk=0,pkS=null; epa.stations.forEach((st,k)=>{ n+=st.nAll; z+=st.zeros; if(st.pkAll>pk){pk=st.pkAll;pkS=st;}
+    const tr=document.createElement('tr'); tr.tabIndex=0; tr.dataset.m=k; if(k===selMon)tr.className='sel';
+    [st.id,distBear(st.lat,st.lon).km.toFixed(0),String(st.nAll),String(st.zeros),st.pkAll>0?sig(st.pkAll):'0',st.pkAll>0?fmtCST(st.pkT,true):''].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);});
+    const pick=()=>{ selMon=k; epaCard(); draw(); }; tr.addEventListener('click',pick); tr.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}}); tb.appendChild(tr); });
+  if(selMon<0||selMon>=epa.stations.length){ selMon=pkS?epa.stations.indexOf(pkS):0; document.querySelectorAll('#epaRows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.m===selMon)); }
+  $('epaT').textContent='latest '+fmtCST(epa.tEnd,true);
+  $('epaHead').textContent=n?'Since the detonation the four monitors have reported '+n+' readings. '+z+' of them were zero. The highest was '+sig(pk)+' µg/m³'+(pkS?' at '+pkS.id+' at '+fmtCST(pkS.pkT,true):'')+'. EPA lists 32 µg/m³ as its short-term screening level for lead in air.':'No readings since the detonation yet.';
+  drawMon();
+}
+function drawMon(){
+  const c=$('monChart'), r=c.getBoundingClientRect(), d=window.devicePixelRatio||1; c.width=r.width*d;c.height=r.height*d; const g=c.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  const w=r.width,h=r.height, L=58,Rr=8,T=10,B=22; g.clearRect(0,0,w,h); $('monCap').textContent='';
+  if(!epa||selMon<0||!epa.stations[selMon])return; const st=epa.stations[selMon], a=st.series;
+  const t0=C.T0-2*3600e3, t1=Math.max(C.T0+6*3600e3,epa.tEnd), X=t=>L+(w-L-Rr)*(t-t0)/(t1-t0);
+  let mx=0; a.forEach(q=>{ if(q[0]>=t0&&q[1]>mx)mx=q[1]; }); const top=mx>0?mx*1.25:0.005, Y=v=>h-B-(h-B-T)*Math.min(1,v/top);
+  g.font=`10px 'JetBrains Mono',monospace`; g.fillStyle=css('--muted'); g.strokeStyle=css('--line'); g.lineWidth=1; g.textBaseline='top'; g.textAlign='center';
+  for(let t=Math.ceil(t0/3600e3)*3600e3;t<=t1;t+=3600e3*(t1-t0>10*3600e3?3:1)){ const x=X(t); g.beginPath();g.moveTo(x,T);g.lineTo(x,h-B);g.stroke(); g.fillText(fmtCST(t,true).replace(':00','').replace(' CST',''),x,h-B+5); }
+  g.textAlign='right';g.textBaseline='middle'; g.fillText(sig(top),L-5,T+4); g.fillText('0',L-5,h-B);
+  // detonation
+  g.strokeStyle=css('--bad');g.setLineDash([4,3]);g.beginPath();g.moveTo(X(C.T0),T);g.lineTo(X(C.T0),h-B);g.stroke();g.setLineDash([]);
+  // model: 15 minute averages at the release shown, clipped to the chart
+  const k=sim&&sim.monAvg&&sim.monAvg.length===epa.stations.length?selMon:-1; let mp=0;
+  if(k>=0){ g.strokeStyle=css('--accent');g.lineWidth=1.6;g.beginPath(); let first=true; for(let f=1;f<sim.nF;f++){ const t=C.T0+(f-0.5)*sim.FRAME*1000; if(t>t1)break; const v=sim.monAvg[k][f]*M; if(v>mp)mp=v; const x=X(t),y=Y(v); if(first){g.moveTo(X(C.T0),Y(0));first=false;} g.lineTo(x,y); } g.stroke(); }
+  // measured readings
+  g.fillStyle=css('--ink'); a.forEach(q=>{ if(q[0]<t0)return; const x=X(q[0]),y=Y(q[1]); g.beginPath(); g.arc(x,y,q[1]>0?3:1.6,0,7); g.fill(); });
+  const x=X(C.T0+tMin*60000); if(x>=L&&x<=w-Rr){ g.strokeStyle=css('--ink');g.lineWidth=1;g.beginPath();g.moveTo(x,T);g.lineTo(x,h-B);g.stroke(); }
+  $('monCap').textContent=st.id+', '+distBear(st.lat,st.lon).km.toFixed(0)+' km from the site. Dots are EPA readings in µg/m³ (small dots are zeros). The dashed line is the detonation.'+(k>=0?' The blue line is the model at the release shown ('+sig(M)+' kg)'+(mp>top?', which peaks at '+sig(mp)+' µg/m³, far above the chart. The monitors saw nothing like it.':'.'):'');
 }
 function fitCard(){
   if(!sim||!fits)return;
@@ -830,11 +877,11 @@ function update(){
     if(wx) rows.push(['Air temperature and pressure used',(wx.T-273.15).toFixed(1)+' °C, '+(wx.P/100).toFixed(0)+' hPa'],['Forecast at the site over the 48 h',wx.rain.toFixed(1)+' mm rain, '+wx.snow.toFixed(1)+' cm snow']);
     kvFill('siteKv',rows);
   }
-  draw(); drawChart();
+  draw(); drawChart(); drawMon();
 }
 
 /* ---- data freshness ---- */
-function clearAll(text){ met=null; sim=null; recStats=[]; bbox=null; ['sumKv','siteKv','fitKv'].forEach(id=>{$(id).innerHTML='';}); $('rows').innerHTML=''; $('bud').innerHTML=''; $('fitNote').textContent=''; $('monRows').innerHTML=''; $('fitHead').textContent=''; $('sumHead').textContent='No current result'; townCard(); msg(text); draw(); drawChart(); }
+function clearAll(text){ met=null; sim=null; recStats=[]; bbox=null; ['sumKv','siteKv','fitKv'].forEach(id=>{$(id).innerHTML='';}); $('rows').innerHTML=''; $('bud').innerHTML=''; $('fitNote').textContent=''; $('monRows').innerHTML=''; $('fitHead').textContent=''; epaCard(); $('sumHead').textContent='No current result'; townCard(); msg(text); draw(); drawChart(); }
 function setStatus(){
   if(!fetchedAt)return;
   const now=Date.now(), age=Math.round((now-fetchedAt)/60000), pill=$('src');
@@ -909,7 +956,8 @@ async function loadEPA(){
       // Net dose after the detonation: every reading minus that monitor's own pre-detonation mean. Negative
       // differences are kept, so noise averages out instead of adding up.
       sr.forEach((q,i)=>{ if(q[0]<C.T0||q[0]>WIN)return; if(q[1]>peak)peak=q[1]; const dt=Math.min(15,i+1<sr.length?(sr[i+1][0]-q[0])/60000:5); dose+=(q[1]-base)*dt; sdt2+=dt*dt; n++; tEnd=q[0]; });
-      return {id:st.id,lat:st.lat,lon:st.lon,n:sr.length,nPost:n,base,prePeak,peak,dose,sdt2,tEnd}; });
+      let pkAll=0,pkT=0,zeros=0,nAll=0; sr.forEach(q=>{ if(q[0]<C.T0)return; nAll++; if(q[1]===0)zeros++; if(q[1]>pkAll){pkAll=q[1];pkT=q[0];} });
+      return {id:st.id,lat:st.lat,lon:st.lon,n:sr.length,nPost:n,base,prePeak,peak,dose,sdt2,tEnd,series:sr,pkAll,pkT,zeros,nAll,last:sr[sr.length-1]}; });
     if(!stations.length)throw 0;
     let pm=0; preAll.forEach(v=>{pm+=v;}); pm=preAll.length?pm/preAll.length:0; let pv=0; preAll.forEach(v=>{pv+=(v-pm)*(v-pm);});
     epa={stations,tEnd:Math.max.apply(null,stations.map(q=>q.tEnd)),preN:preAll.length,preStd:preAll.length>1?Math.sqrt(pv/(preAll.length-1)):0};
@@ -931,7 +979,7 @@ async function loadArmy(){
   }catch(e){ fail(); }
 }
 let refreshing=false, retryT=0;
-async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
+async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); epaCard(); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
 
 /* ---- town selection ---- */
 function durWords(min){ if(min<60)return Math.round(min)+' minutes'; const h=Math.floor(min/60), m=Math.round(min%60); return m?h+' h '+m+' min':h+(h===1?' hour':' hours'); }
@@ -963,7 +1011,8 @@ function selectTown(k,keepView){
 $('townSel').addEventListener('change',e=>selectTown(+e.target.value));
 $('resetView').addEventListener('click',()=>selectTown(-1));
 $('goArr').addEventListener('click',()=>{ if(selRec<0||!sim||!recStats[selRec]||recStats[selRec].any<0)return; tMin=Math.min(2880,recStats[selRec].any*sim.FRAME/60); $('time').value=tMin; update(); });
-map.on('click',e=>{ const p=map.latLngToContainerPoint(e.latlng); let best=-1,bd=16; C.RECEPTORS.forEach((r,k)=>{ const q=map.latLngToContainerPoint([r.lat,r.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=k;} }); if(best>=0) selectTown(best,true); });
+map.on('click',e=>{ const p=map.latLngToContainerPoint(e.latlng); let best=-1,bd=16;
+  if(epa&&$('lyM').checked){ let bm=-1,dm=14; epa.stations.forEach((st,k)=>{ const q=map.latLngToContainerPoint([st.lat,st.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<dm){dm=d;bm=k;} }); if(bm>=0){ selMon=bm; epaCard(); draw(); return; } } C.RECEPTORS.forEach((r,k)=>{ const q=map.latLngToContainerPoint([r.lat,r.lon]), d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){bd=d;best=k;} }); if(best>=0) selectTown(best,true); });
 
 /* ---- controls ---- */
 function goNow(){ const m=(Date.now()-C.T0)/60000; tMin=Math.max(0,Math.min(2880,Math.round(m/5)*5)); $('time').value=tMin; }

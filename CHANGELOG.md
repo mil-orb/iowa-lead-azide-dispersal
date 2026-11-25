@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0 (2026-11-25)
+
+- EPA's monitor readings are shown directly: a summary, a table and a chart per monitor with the model for comparison, and the reading nearest the displayed time on the map.
+- Monitors are drawn as neutral hollow markers.
+
 ## 1.5.0 (2026-11-25)
 
 Event parameters brought in line with what has been published.
