@@ -34,7 +34,7 @@ git clone https://github.com/mil-orb/iowa-lead-azide-dispersal
 python -m http.server 8765 --directory iowa-lead-azide-dispersal
 ```
 
-Open http://localhost:8765. The model and the map work from any static server. The two small functions in `api/` (the Army map feed and the About credit) only run on Vercel, so locally those two panels show their fallback.
+Open http://localhost:8765. The model and the map work from any static server. The small function in `api/` (the Army map feed) only runs on Vercel, so locally that panel shows its fallback links.
 
 Tests (Node 20 or newer, no packages):
 
@@ -42,7 +42,7 @@ Tests (Node 20 or newer, no packages):
 node --test test/core.test.js
 ```
 
-Deploy your own copy with `vercel deploy --prod`. Set a `BUILT_BY` environment variable if you want a name in the About box.
+Deploy your own copy with `vercel deploy --prod`.
 
 ## Limits
 

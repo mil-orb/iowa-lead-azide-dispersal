@@ -2,7 +2,7 @@ blank_issues_enabled: false
 contact_links:
   - name: Report a security problem
     url: https://github.com/mil-orb/iowa-lead-azide-dispersal/security/advisories/new
-    about: Please don't open a public issue for anything that could run script in a visitor's browser or leak from the functions.
+    about: Please don't open a public issue for anything that could run script in a visitor's browser or leak from the function.
   - name: Measured lead levels and official instructions
     url: https://response.epa.gov/site/site_profile.aspx?site_id=17211
     about: This project is a model. For measurements and what to do, go to EPA and the Army.

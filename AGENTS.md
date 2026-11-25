@@ -2,7 +2,7 @@
 
 ## Never
 
-- Never put a real person's name, an email address or a home location in any file or commit. The About credit comes from the `BUILT_BY` environment variable on Vercel and must stay out of the repo.
+- Never put a real person's name, an email address or a home location in any file or commit. The About box links to this repository and names nobody.
 - Never add a cached or bundled weather snapshot. The page shows live data or nothing.
 - Never remove or bury the estimate warning or the EPA and Army links.
 - Never add health thresholds, safety advice or a claim that the model was validated against measurements.
@@ -26,7 +26,6 @@ python -m http.server 8765
   - `<script id="core">`: the model. No DOM access, so the tests can load it in Node. Weather request (`metUrl`), parsing (`parseMet`), sampling (`sample`), physics (`settle`, `vdTurb`, `stab`), the particle run (`createSim`), and the area lookups used to fit the release (`areaCurve`, `areaAbove`, `massForArea`).
   - The second `<script>`: the UI. Leaflet map, canvas overlay (`draw`), town picker (`selectTown`, `townCard`), freshness handling (`loadMet`, `setStatus`, `clearAll`).
 - `api/army-maps.js`: reads the plant's DVIDS RSS feed and returns the newest map images. Only accepts DVIDS links and its image host.
-- `api/about.js`: returns `BUILT_BY`.
 - `test/core.test.js`: offline tests on made-up weather.
 
 ## Rules
