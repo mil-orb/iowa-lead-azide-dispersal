@@ -1,0 +1,9 @@
+# Vercel project link and pulled environment files (hold account ids and the About credit)
+.vercel
+.env*
+# Never ship stored weather: the page is live data or nothing
+winds-snapshot.json
+node_modules/
+*.bak
+*.bak.html
+.claude/
