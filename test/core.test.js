@@ -49,8 +49,8 @@ test('mass is conserved and the plume follows the wind', () => {
   const sim = run(C.parseMet(fakeWeather({ dir: 45, speed: 6 })));
   const t = sim.totals();
   assert.ok(Math.abs(t.air + t.dry + t.wet + t.exited - 1) < 1e-9, 'airborne + deposited + exited = released');
-  const grid = sim.dep.reduce((a, b) => a + b, 0);
-  assert.ok(Math.abs(grid - t.dry - t.wet) < 1e-9, 'the deposition grid holds everything deposited');
+  const grid = sim.dep.reduce((a, b) => a + b, 0) + sim.dep2.reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(grid - t.dry - t.wet) < 1e-9, 'the two deposition grids hold everything deposited');
   const f = 3 * 4; // three hours in
   const dx = (sim.cen[f * 3] - C.SRC.lon) * C.R * Math.cos(C.SRC.lat * Math.PI / 180), dy = (sim.cen[f * 3 + 1] - C.SRC.lat) * C.R;
   const bearing = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360, km = Math.hypot(dx, dy) / 1000;
@@ -82,27 +82,79 @@ test('a monitor downwind sees fine dust and one upwind sees none', () => {
   assert.strictEqual(total(sim.monAvg[1]), 0, 'upwind monitor records nothing');
 });
 
-test('the fine grid overrides the wide grid where it covers', () => {
-  const wide = C.parseMet(fakeWeather({ dir: 45, speed: 6 }));
-  const hours = 14, fill = (v) => new Array(hours).fill(v);
-  const one = fakeWeather({ dir: 90, speed: 3 })[0].hourly, hourly = {};
-  for (const k of Object.keys(one)) hourly[k] = one[k].slice(0, hours);
-  const np = C.NEST.nx * C.NEST.ny;
-  wide.nest = C.parseMet(Array.from({ length: np }, () => ({ elevation: 200, hourly })), C.NEST, 12);
+test('the wide grid takes over outside the main grid', () => {
+  const main = C.parseMet(fakeWeather({ dir: 45, speed: 6 }));
+  const one = fakeWeather({ dir: 90, speed: 3 })[0];
+  main.outer = C.parseMet(Array.from({ length: C.OUTER.nx * C.OUTER.ny }, () => one), C.OUTER);
   const o = {};
-  assert.ok(C.sample(wide, C.SRC.lon, C.SRC.lat, 10, 2, o));
-  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 3) < 1e-3, 'inside the fine grid the wind is the fine one');
-  assert.ok(C.sample(wide, -95, 38, 10, 2, o));
-  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'outside it the wind is the wide one');
-  assert.ok(C.sample(wide, C.SRC.lon, C.SRC.lat, 10, 30, o));
-  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'after the fine grid ends the wide one takes over');
+  assert.ok(C.sample(main, C.SRC.lon, C.SRC.lat, 10, 2, o));
+  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 6) < 1e-3, 'inside the main grid the wind is the main one');
+  assert.ok(C.sample(main, -90, 31, 10, 2, o));
+  assert.ok(Math.abs(Math.hypot(o.u, o.v) - 3) < 1e-3, 'outside it the wide grid is used');
+  assert.strictEqual(C.sample(main, -70, 31, 10, 2, o), false, 'beyond both grids there is no wind');
+});
+
+test('stability classes follow the EPA tables', () => {
+  // EPA-454/R-99-005 Table 6-7 (day, by solar radiation) and Table 6-4 with 6-6 (night, by cloud cover). 0 = A ... 5 = F.
+  assert.strictEqual(C.stab(1.5, 950, 0), 0);   // light wind, strong sun: A
+  assert.strictEqual(C.stab(2.5, 700, 0), 1);   // B
+  assert.strictEqual(C.stab(4, 400, 0), 2);     // C
+  assert.strictEqual(C.stab(5.5, 400, 100), 3); // D
+  assert.strictEqual(C.stab(4, 100, 100), 3);   // weak sun: D at any wind
+  assert.strictEqual(C.stab(7, 950, 0), 2);     // strong wind, strong sun: C
+  assert.strictEqual(C.stab(1, 0, 0), 5);       // clear calm night: F
+  assert.strictEqual(C.stab(2.5, 0, 100), 4);   // cloudy night, light wind: E
+  assert.strictEqual(C.stab(4.5, 0, 0), 4);     // clear night, moderate wind: E
+  assert.strictEqual(C.stab(4.5, 0, 100), 3);   // cloudy night, moderate wind: D
+  assert.strictEqual(C.stab(7, 0, 0), 3);       // windy night: D
+});
+
+test('air properties match reference values', () => {
+  const a = C.airProps(273.15, 101325), b = C.airProps(293.15, 101325);
+  assert.ok(Math.abs(a.mu - 1.716e-5) < 2e-8, 'viscosity at 0 C');
+  assert.ok(Math.abs(b.mu - 1.81e-5) / 1.81e-5 < 0.01, 'viscosity at 20 C, got ' + b.mu);
+  assert.ok(Math.abs(b.rho - 1.204) < 0.005, 'density at 20 C, got ' + b.rho);
+  assert.ok(Math.abs(b.lam - 66.5e-9) < 1e-10, 'mean free path at 20 C');
+  assert.ok(C.settle(10, 9500, a) > C.settle(10, 9500, b), 'colder air is less viscous, so particles fall faster');
+});
+
+test('wind follows a logarithmic profile near the ground', () => {
+  // Build a column that obeys the log law exactly and check the model reproduces it between and below the levels.
+  const ust = 0.4, z0 = C.Z0, log = (z) => ust / 0.4 * Math.log(z / z0);
+  const w = fakeWeather({ dir: 270, speed: 1 });
+  for (const z of [10, 80, 120, 180]) w[0].hourly['wind_speed_' + z + 'm'] = w[0].hourly['wind_speed_' + z + 'm'].map(() => log(z));
+  const met = C.parseMet(w), o = {};
+  for (const z of [3, 10, 30, 60, 100, 150]) {
+    C.sample(met, C.SRC.lon, C.SRC.lat, z, 2, o);
+    assert.ok(Math.abs(o.u - log(z)) / log(z) < 0.03, 'wind at ' + z + ' m: model ' + o.u.toFixed(2) + ', log law ' + log(z).toFixed(2));
+  }
+});
+
+test('the dust cloud moves at the wind speed', () => {
+  // Finest particles in a uniform 6 m/s wind from the north: after 3 hours the centre should be 64.8 km south.
+  const sim = C.createSim(C.parseMet(fakeWeather({ dir: 0, speed: 6 })), { top: 100, mmd: 25, rho: 9500, mult: 1, hours: 3, nPer: 2000, seed: 5, dt: 50 });
+  while (!sim.advance(500));
+  const f = 12, ys = [];
+  for (let j = 0; j < sim.fPer; j++) { const y = sim.fy[f * sim.fN + j]; if (y === y) ys.push((C.SRC.lat - y) * C.R); }
+  const km = ys.reduce((a, b) => a + b, 0) / ys.length / 1000;
+  assert.ok(Math.abs(km / 64.8 - 1) < 0.02, 'moved ' + km.toFixed(1) + ' km, expected 64.8');
+});
+
+test('fine dust is defined by aerodynamic diameter', () => {
+  const met = C.parseMet(fakeWeather());
+  const lead = C.createSim(met, { top: 100, mmd: 25, rho: 9500, hours: 1, nPer: 10, frames: false });
+  const soil = C.createSim(met, { top: 100, mmd: 25, rho: 2650, hours: 1, nPer: 10, frames: false });
+  const cut = (s) => Math.max(...C.DIAM.filter((d, b) => s.dae[b] <= 10));
+  assert.strictEqual(cut(lead), 3, 'for lead oxide, PM10 is 3 microns physical and under');
+  assert.strictEqual(cut(soil), 5, 'for soil dust, PM10 is 5 microns physical and under');
+  assert.ok(lead.fineFrac < soil.fineFrac);
 });
 
 // ---- analytic checks ----
 const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 
 test('a dust layer mixes to an even profile and stays even', () => {
-  // 0.3 micron particles barely settle or deposit, so only mixing and reflection act on them.
+  // 0.2 micron particles barely settle or deposit, so only mixing and reflection act on them.
   for (const top of [600, 60]) {
     const sim = run(C.parseMet(fakeWeather()), { top, hours: 6, nPer: 3000, dt: 50 });
     const { z, alive } = sim.state();
@@ -123,7 +175,7 @@ test('airborne mass decays at the rate settling and deposition imply', () => {
   const { m } = sim.state();
   const bin = C.DIAM.indexOf(10), frac = C.binFractions(25, 2.5)[bin];
   let left = 0; for (let i = bin * nPer; i < (bin + 1) * nPer; i++) left += m[i];
-  const got = left / frac, vs = C.settle(10, 9500), vd = C.vdTurb(10, vs, 0.0869 * U10);
+  const got = left / frac, vs = C.settle(10, 9500), vd = C.vdTurb(10, vs, 0.4 / Math.log(10 / C.Z0) * U10);
   const ideal = Math.exp(-(vs + vd) * hours * 3600 / h);
   assert.ok(got >= ideal - 0.02 && got <= ideal + 0.15, 'airborne share ' + got.toFixed(3) + ' against well-mixed ' + ideal.toFixed(3));
 });

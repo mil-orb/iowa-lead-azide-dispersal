@@ -133,7 +133,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
     <div>
       <div class="eyebrow">Live model estimate</div>
       <h1>Iowa Lead Azide Detonation Dispersal Simulator</h1>
-      <p class="sub">Where lead dust from the controlled detonation at the Iowa Army Ammunition Plant (Middletown, Iowa, about 9:00 AM CST on November 25, 2026) is carried over the following 48 hours, modeled from live weather data across Iowa, Missouri, Illinois and eastern Kansas.</p>
+      <p class="sub">Where lead dust from the controlled detonation at the Iowa Army Ammunition Plant (Middletown, Iowa, about 9:00 AM CST on November 25, 2026) is carried over the following 48 hours, modeled from live weather data. Coarse dust falls out within hours near the site. The finest dust can stay airborne for days, so it is followed across the central United States.</p>
     </div>
     <div class="hbtns"><a class="gh" href="https://github.com/mil-orb/iowa-lead-azide-dispersal" target="_blank" rel="noopener" aria-label="Source code on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg><span>GitHub</span></a><button id="aboutBtn" type="button">About</button></div>
   </header>
@@ -172,7 +172,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
               <select id="wlev" aria-label="Wind height"><option value="0">10 m</option><option value="1">80 m</option><option value="3">180 m</option><option value="5">450 m</option><option value="8">1000 m</option><option value="10">1600 m</option></select></label>
           </div>
           <div class="legend">
-            <span><i class="dot" style="background:var(--fine)"></i>2.5 µm and smaller</span>
+            <span><i class="dot" style="background:var(--fine)"></i>3 µm and smaller (stays aloft)</span>
             <span><i class="dot" style="background:var(--mid)"></i>5 to 10 µm</span>
             <span><i class="dot" style="background:var(--coarse)"></i>20 µm and larger</span>
             <span class="rampwrap"><canvas id="ramp" width="150" height="9"></canvas><span class="rampticks"><span id="rt0">0.05</span><span id="rt1">5</span><span id="rt2">500</span></span></span>
@@ -242,6 +242,16 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
         <p class="tiny" id="fitNote" style="margin:8px 0 0"></p>
       </div>
 
+      <div class="panel">
+        <h2>Wind check <span class="tiny">forecast against airport observations</span></h2>
+        <p class="big" id="obsHead">Waiting for observations.</p>
+        <div class="tablewrap"><table>
+          <thead><tr><th>Airport</th><th>Readings</th><th>Speed, model / observed (m/s)</th><th>Direction off by</th></tr></thead>
+          <tbody id="obsRows"></tbody>
+        </table></div>
+        <p class="tiny" style="margin:8px 0 0">Model 10 m wind at each airport and time against National Weather Service observations since the detonation. Surface stations cannot test the faster winds a few hundred metres up, which carry most of the plume.</p>
+      </div>
+
       <details class="panel">
         <summary>Change the assumptions</summary>
         <div class="ctl">
@@ -263,17 +273,20 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
   <details class="panel notes">
     <summary>How the model works and where it is weak</summary>
     <ul>
-      <li><b>Weather.</b> Hourly Open-Meteo data (NOAA HRRR and GFS) on a 0.6° grid of 154 points from 36.5 to 42.5°N and 96.5 to 88.7°W, plus a 0.2° grid of 99 points over the first 150 km of the plume track for the first 12 hours: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. It is fetched on every load and every 30 minutes after, through a shared copy that is at most 10 minutes old, and the page shows the fetch time. If refreshing fails for 90 minutes the page hides the result.</li>
-      <li><b>Particles.</b> 48,000 model particles in eight size bins (a quick 12,000 particle pass shows first) from 0.3 to 80 µm, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top and move in 50 second steps with wind interpolated in space, height and time.</li>
-      <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction (Seinfeld and Pandis 2016) and a Schiller-Naumann drag correction for the larger sizes. For lead oxide that is about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm.</li>
-      <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point from 10 m wind, sunlight and cloud cover (Turner's method). The class gives turbulence intensity (Gifford 1976), which is multiplied by the 10 m wind. For class D that works out to about 2.1 and 1.0 times the friction velocity, close to the ratios usually quoted for a neutral surface layer. Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
+      <li><b>Weather.</b> Hourly Open-Meteo data. For the first day that is NOAA's 3 km HRRR model (checked by requesting it by name and comparing), then GFS. A main grid of 154 points at 0.6° covers 36.5 to 42.5°N and 96.5 to 88.7°W: wind at 10, 80, 120 and 180 m and at 950, 925, 900 and 850 hPa (placed at their true height above ground using geopotential height and terrain), boundary layer height, precipitation, shortwave radiation and cloud cover. A wide grid of 168 points at 1.5°, from 27 to 43.5°N and 98.5 to 79°W, carries fewer levels and is used once dust leaves the main grid. Between levels the wind is interpolated in the logarithm of height, as in a logarithmic wind profile, and below 10 m it follows the log law for 0.1 m roughness. Data is fetched on every load and every 30 minutes after, through a shared copy that is at most 10 minutes old, and the page shows the fetch time. If refreshing fails for 90 minutes the page hides the result.</li>
+      <li><b>Particles.</b> 48,000 model particles in ten size bins (a quick 12,000 particle pass shows first) from 0.2 to 80 µm physical diameter, with mass split by a lognormal distribution (geometric standard deviation 2.5). They start spread evenly between the ground and the cloud top, with turbulent velocities drawn from the surrounding air, and move in 50 second steps with wind interpolated in space, height and time. Air monitors and the terms PM10 and PM2.5 use aerodynamic diameter, which is the physical diameter times the square root of the density relative to water. Lead oxide is 9.5 times denser than water, so PM10 means about 3 µm and under here, and PM2.5 about 0.8 µm and under.</li>
+      <li><b>Settling.</b> Stokes fall speed with the Cunningham slip correction (Seinfeld and Pandis 2016) and a Schiller-Naumann drag correction for the larger sizes. Air viscosity (Sutherland's law), density and mean free path are computed from the forecast temperature and pressure at the site. For lead oxide that gives about 0.3 mm/s at 1 µm and 3 cm/s at 10 µm, so PM2.5-size lead stays airborne for days while 10 µm particles are gone within about a day.</li>
+      <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point. By day it comes from 10 m wind and solar radiation (the EPA solar radiation method, EPA-454/R-99-005 Table 6-7). At night it comes from 10 m wind and cloud cover (Turner's key in the same report). Turner's overcast rule needs a cloud ceiling, which is not available, so an overcast night is treated as cloudy. The class gives turbulence intensity (Gifford 1976), which is multiplied by the 10 m wind. For class D that works out to about 2.1 and 1.0 times the friction velocity, close to the ratios usually quoted for a neutral surface layer. Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
       <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (Slinn 1982, as given by Seinfeld and Pandis 2016: aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
       <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second (Baklanov and Sørensen 2001). That rate was derived for particles under 2.8 µm and is applied here to every size, so washout of coarse dust is understated.</li>
       <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
       <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours.</li>
       <li><b>Checks.</b> Automated tests confirm that mass is conserved, that settling speeds match hand calculations, that a dust layer mixes to an even profile and stays even, that airborne mass decays at the rate the settling and deposition speeds imply, and that crosswind spread follows Draxler's curve within 20%. On the Nov 25 weather the modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
-      <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released lead is airborne within 20 km of it. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
-      <li><b>Weak points.</b> Hours after the fetch time are forecast. The weather grid is about 50 by 65 km, so terrain, river valleys and local wind shifts are missing. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
+      <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released PM10-size dust is airborne within 20 km of it, at any height. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
+      <li><b>Wind check.</b> The page compares the model's 10 m wind with National Weather Service observations at eight airports for the hours already past. A one-off check against the Davenport weather balloon at 6:00 AM CST on Nov 25 found the model within 8° in direction and about 2 m/s in speed at 925 and 850 hPa.</li>
+      <li><b>Sensitivity.</b> Halving and doubling the constants that have no published source (vertical mixing time, turbulence above the boundary layer, horizontal memory time) moved arrival times by 15 minutes or less and the monitor limit by about 15% on the Nov 25 weather.</li>
+      <li><b>Snow and rain.</b> Precipitation washes dust out using one rate fitted for rain and for particles under 2.8 µm. Snow scavenges differently and the model does not treat it separately.</li>
+      <li><b>Weak points.</b> Hours after the fetch time are forecast. The main weather grid is about 50 by 65 km and the wide one about 150 km, so terrain, river valleys, fronts and local wind shifts are smoothed. One forecast is used, with no ensemble, so the far end of the track is the least certain. Vertical air motion is ignored. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
     </ul>
     <p>Full references for every formula and constant are in the <a href="https://github.com/mil-orb/iowa-lead-azide-dispersal#references" target="_blank" rel="noopener">project README</a>.</p>
     <p>Official sources: <a href="https://experience.arcgis.com/experience/1ddcf8b9d8314971b00dac8893ae9cd6" target="_blank" rel="noopener">EPA data dashboard</a>, <a href="https://response.epa.gov/site/site_profile.aspx?site_id=17211" target="_blank" rel="noopener">EPA response site and emergency permit</a>, <a href="https://www.army.mil/asc#org-iowa-army-ammunition-plant" target="_blank" rel="noopener">Army notifications</a>, <a href="https://www.dvidshub.net/unit/IAAAP" target="_blank" rel="noopener">Army map archive on DVIDS</a>, <a href="https://www.epa.gov/lead/actions-reduce-potential-lead-exposure" target="_blank" rel="noopener">EPA on reducing lead exposure</a>, <a href="https://hhs.iowa.gov/health-prevention/environmental-health/lead-exposure-surveillance" target="_blank" rel="noopener">Iowa HHS lead page</a>. Weather from <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors.</p>
@@ -297,16 +310,19 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 const R=111320, GRAV=9.81;
 const GRID={lat0:36.5,dlat:0.6,ny:11,lon0:-96.5,dlon:0.6,nx:14};
 const LATMAX=GRID.lat0+GRID.dlat*(GRID.ny-1), LONMAX=GRID.lon0+GRID.dlon*(GRID.nx-1);
-const LEVELS=[10,80,120,180,300,450,600,800,1000,1300,1600,2000];
+const LEVELS=[2,5,10,20,40,80,120,180,300,450,600,800,1000,1300,1600,2000];
+const Z0=0.1; // m, surface roughness for farmland. Used for the wind profile below 10 m and for friction velocity.
 const PLEV=[950,925,900,850];
 const NL=LEVELS.length, NP=GRID.nx*GRID.ny;
 const SRC={lat:40.805,lon:-91.255}; // assumed detonation point. The real one is not public. The EPA monitor line points back to within 1 km of this.
 const SRC_SHIFTS=[[0.027,0],[-0.027,0],[0,0.0356],[0,-0.0356]]; // 3 km north, south, east, west
 const T0=Date.UTC(2026,10,25,15,0,0); // 9:00 AM CST
 const H_START='2026-11-25T14:00', H_END='2026-11-27T16:00';
-// Fine grid over the first 150 km of the plume track, for the first 12 hours.
-const NEST={lat0:39.6,dlat:0.2,ny:9,lon0:-92.8,dlon:0.2,nx:11}, NEST_END='2026-11-26T03:00';
-const DIAM=[0.3,1,2.5,5,10,20,40,80];
+// Wide, coarse grid so fine dust can be followed after it leaves the main grid.
+const OUTER={lat0:27.0,dlat:1.5,ny:12,lon0:-98.5,dlon:1.5,nx:14};
+const OLATMAX=OUTER.lat0+OUTER.dlat*(OUTER.ny-1), OLONMAX=OUTER.lon0+OUTER.dlon*(OUTER.nx-1);
+const OGRID={d:0.1,nx:Math.round((OLONMAX-OUTER.lon0)/0.1),ny:Math.round((OLATMAX-OUTER.lat0)/0.1)}; // coarse deposition grid outside the main one
+const DIAM=[0.2,0.5,1,2,3,5,10,20,40,80]; // physical diameters, microns
 // Lateral intensities are Gifford's (1976) sigma-theta of 25, 20, 15, 10, 5 and 2.5 degrees in radians. Vertical ones are
 // about half of those, a common rule of thumb with no single source; for class D they give sigma_w of about 1.0 u*.
 const IY=[0.44,0.36,0.27,0.18,0.09,0.045], IZ=[0.21,0.17,0.13,0.09,0.06,0.035];
@@ -324,23 +340,33 @@ const RECEPTORS=[
  ['Hannibal, MO',39.708,-91.358],['Moberly, MO',39.418,-92.438],['Brookfield, MO',39.784,-93.073],['Chillicothe, MO',39.795,-93.552],['Marshall, MO',39.123,-93.197],
  ['Columbia, MO',38.952,-92.334],['Jefferson City, MO',38.577,-92.174],['Sedalia, MO',38.704,-93.228],['Warrensburg, MO',38.763,-93.736],['Clinton, MO',38.369,-93.778],
  ['Kansas City, MO',39.100,-94.578],['St. Joseph, MO',39.768,-94.847],['Springfield, MO',37.209,-93.292],['Joplin, MO',37.084,-94.513],['Rolla, MO',37.951,-91.771],
- ['St. Louis, MO',38.627,-90.199],['Topeka, KS',39.048,-95.678],['Lawrence, KS',38.972,-95.235],['Omaha, NE',41.257,-95.934]].map(r=>({name:r[0],lat:r[1],lon:r[2]}));
+ ['St. Louis, MO',38.627,-90.199],['Topeka, KS',39.048,-95.678],['Lawrence, KS',38.972,-95.235],['Omaha, NE',41.257,-95.934],
+ ['Tulsa, OK',36.154,-95.993],['Fayetteville, AR',36.063,-94.157],['Harrison, AR',36.230,-93.108],['Fort Smith, AR',35.386,-94.398],['Little Rock, AR',34.746,-92.290],
+ ['Hot Springs, AR',34.503,-93.055],['El Dorado, AR',33.208,-92.666],['Texarkana, AR',33.442,-94.038],['Memphis, TN',35.150,-90.049],['Shreveport, LA',32.525,-93.750],
+ ['Monroe, LA',32.509,-92.119],['Baton Rouge, LA',30.451,-91.154],['New Orleans, LA',29.951,-90.072],['Vicksburg, MS',32.353,-90.878],['Jackson, MS',32.299,-90.185],
+ ['Hattiesburg, MS',31.327,-89.290],['Mobile, AL',30.695,-88.040],['Montgomery, AL',32.377,-86.300],['Pensacola, FL',30.421,-87.217],['Panama City, FL',30.159,-85.660]].map(r=>({name:r[0],lat:r[1],lon:r[2]}));
 const RREC=20000, HREC=100;
-const REACH=1e-4; // a town counts as reached once this share of the release is airborne within RREC
+const REACH=1e-4; // a town counts as reached once this share of the released fine dust (10 microns and under) is airborne within RREC
 
-function metUrl(G,hEnd){
+function metUrl(G,lite){
   G=G||GRID; const la=[],lo=[];
   for(let j=0;j<G.ny;j++)for(let i=0;i<G.nx;i++){la.push((G.lat0+j*G.dlat).toFixed(2));lo.push((G.lon0+i*G.dlon).toFixed(2));}
-  let v='wind_speed_10m,wind_direction_10m,wind_speed_80m,wind_direction_80m,wind_speed_120m,wind_direction_120m,wind_speed_180m,wind_direction_180m';
-  for(const p of PLEV) v+=',wind_speed_'+p+'hPa,wind_direction_'+p+'hPa,geopotential_height_'+p+'hPa';
+  let v=lite?'wind_speed_10m,wind_direction_10m,wind_speed_180m,wind_direction_180m':'wind_speed_10m,wind_direction_10m,wind_speed_80m,wind_direction_80m,wind_speed_120m,wind_direction_120m,wind_speed_180m,wind_direction_180m';
+  for(const p of (lite?[925,850]:PLEV)) v+=',wind_speed_'+p+'hPa,wind_direction_'+p+'hPa,geopotential_height_'+p+'hPa';
   v+=',boundary_layer_height,precipitation,shortwave_radiation,cloud_cover';
-  return 'https://api.open-meteo.com/v1/forecast?latitude='+la.join(',')+'&longitude='+lo.join(',')+'&hourly='+v+'&wind_speed_unit=ms&timezone=UTC&start_hour='+H_START+'&end_hour='+(hEnd||H_END);
+  return 'https://api.open-meteo.com/v1/forecast?latitude='+la.join(',')+'&longitude='+lo.join(',')+'&hourly='+v+'&wind_speed_unit=ms&timezone=UTC&start_hour='+H_START+'&end_hour='+H_END;
 }
+// One point at the site: temperature and pressure for air properties, rain and snow for the page notes.
+function pointUrl(){ return 'https://api.open-meteo.com/v1/forecast?latitude='+SRC.lat+'&longitude='+SRC.lon+'&hourly=temperature_2m,surface_pressure,rain,snowfall&timezone=UTC&start_hour='+H_START+'&end_hour='+H_END; }
+// Pasquill-Gifford class, 0 (A) to 5 (F). ws = 10 m wind (m/s), sw = solar radiation (W/m2), cc = total cloud cover (%).
+// Day: EPA solar radiation method (EPA-454/R-99-005, Table 6-7). Night: Turner's key (same report, Tables 6-4 and 6-6),
+// net radiation index -1 for more than 4/10 cloud and -2 otherwise. Turner's overcast rule needs a ceiling height,
+// which is not available here, so an overcast night is treated as index -1.
 function stab(ws,sw,cc){
-  if(cc>=90) return 3;
-  const w= ws<2?0: ws<3?1: ws<5?2: ws<6?3:4;
-  if(sw>10){ const i= sw>600?0: sw>300?1:2; return [[0,0.5,1],[0.5,1,2],[1,1.5,2],[2,2.5,3],[2,3,3]][w][i]; }
-  return [[4,5],[4,5],[3,4],[3,3],[3,3]][w][cc>=50?0:1];
+  if(sw>1){ const w= ws<2?0: ws<3?1: ws<5?2: ws<6?3:4, i= sw>=925?0: sw>=675?1: sw>=175?2:3;
+    return [[0,0,1,3],[0,1,2,3],[1,1,2,3],[2,2,3,3],[2,3,3,3]][w][i]; }
+  const w= ws<=0.7?0: ws<=1.8?1: ws<=2.8?2: ws<=3.3?3: ws<=3.8?4: ws<=4.8?5: ws<=5.4?6: ws<6?7:8;
+  return [[5,5],[5,5],[4,5],[4,5],[3,4],[3,4],[3,4],[3,3],[3,3]][w][cc>40?0:1]; // Turner's 7 (G) is merged into F
 }
 function parseMet(arr,G,minH){
   G=G||GRID; const NP=G.nx*G.ny;
@@ -348,24 +374,28 @@ function parseMet(arr,G,minH){
   const nt=arr[0].hourly.time.length;
   if(nt<(minH||50)) throw new Error('Weather data covers only '+nt+' hours');
   const U=new Float32Array(nt*NL*NP),V=new Float32Array(nt*NL*NP),BLH=new Float32Array(nt*NP),P=new Float32Array(nt*NP),CLS=new Float32Array(nt*NP),S10=new Float32Array(nt*NP);
-  const rad=Math.PI/180; let missing=0;
+  const rad=Math.PI/180, L0=Math.log(10/Z0), at=(a,t)=>a?a[t]:null; let missing=0;
   for(let p=0;p<NP;p++){
     const h=arr[p].hourly, el=arr[p].elevation||0;
     for(let t=0;t<nt;t++){
       const col=[];
-      for(const z of [10,80,120,180]){ const s=h['wind_speed_'+z+'m'][t], d=h['wind_direction_'+z+'m'][t]; if(s==null||d==null){missing++;continue;} col.push([z,-s*Math.sin(d*rad),-s*Math.cos(d*rad)]); }
-      for(const pl of PLEV){ const s=h['wind_speed_'+pl+'hPa'][t], d=h['wind_direction_'+pl+'hPa'][t], gh=h['geopotential_height_'+pl+'hPa'][t]; if(s==null||d==null||gh==null){missing++;continue;} const z=gh-el; if(z>200) col.push([z,-s*Math.sin(d*rad),-s*Math.cos(d*rad)]); }
+      for(const z of [10,80,120,180]){ const s=at(h['wind_speed_'+z+'m'],t), d=at(h['wind_direction_'+z+'m'],t); if(s==null||d==null){ if(h['wind_speed_'+z+'m'])missing++; continue; } col.push([z,-s*Math.sin(d*rad),-s*Math.cos(d*rad)]); }
+      for(const pl of PLEV){ const s=at(h['wind_speed_'+pl+'hPa'],t), d=at(h['wind_direction_'+pl+'hPa'],t), gh=at(h['geopotential_height_'+pl+'hPa'],t); if(s==null||d==null||gh==null){ if(h['wind_speed_'+pl+'hPa'])missing++; continue; } const z=gh-el; if(z>200) col.push([z,-s*Math.sin(d*rad),-s*Math.cos(d*rad)]); }
       col.sort((a,b)=>a[0]-b[0]);
       const c=[]; for(const e of col){ if(!c.length||e[0]>=c[c.length-1][0]+20) c.push(e); }
       for(let k=0;k<NL;k++){
         const z=LEVELS[k]; let u=0,v=0; const n=c.length;
-        if(n){ if(z<=c[0][0]){u=c[0][1];v=c[0][2];} else if(z>=c[n-1][0]){u=c[n-1][1];v=c[n-1][2];}
-          else{ let i=0; while(c[i+1][0]<z)i++; const f=(z-c[i][0])/(c[i+1][0]-c[i][0]); u=c[i][1]+f*(c[i+1][1]-c[i][1]); v=c[i][2]+f*(c[i+1][2]-c[i][2]); } }
+        if(n){
+          if(z<=c[0][0]){ const f=c[0][0]<=10.5?Math.max(0,Math.log(z/Z0))/Math.log(c[0][0]/Z0):1; u=c[0][1]*f; v=c[0][2]*f; } // log law below the lowest level
+          else if(z>=c[n-1][0]){u=c[n-1][1];v=c[n-1][2];}
+          else{ let i=0; while(c[i+1][0]<z)i++; const f=Math.log(z/c[i][0])/Math.log(c[i+1][0]/c[i][0]); u=c[i][1]+f*(c[i+1][1]-c[i][1]); v=c[i][2]+f*(c[i+1][2]-c[i][2]); } // linear in ln z, as in a logarithmic wind profile
+        }
         U[(t*NL+k)*NP+p]=u; V[(t*NL+k)*NP+p]=v;
       }
-      const b=h.boundary_layer_height[t]; if(b==null)missing++; BLH[t*NP+p]=Math.max(50,b==null?500:b);
-      P[t*NP+p]=h.precipitation[t]||0; S10[t*NP+p]=h.wind_speed_10m[t]||0;
-      CLS[t*NP+p]=stab(h.wind_speed_10m[t]||0,h.shortwave_radiation[t]||0,h.cloud_cover[t]==null?100:h.cloud_cover[t]);
+      const b=at(h.boundary_layer_height,t); if(b==null)missing++; BLH[t*NP+p]=Math.max(50,b==null?500:b);
+      const ws=at(h.wind_speed_10m,t)||0, cc=at(h.cloud_cover,t);
+      P[t*NP+p]=at(h.precipitation,t)||0; S10[t*NP+p]=ws;
+      CLS[t*NP+p]=stab(ws,at(h.shortwave_radiation,t)||0,cc==null?100:cc);
     }
   }
   const time0=Date.parse(arr[0].hourly.time[0]+':00Z');
@@ -393,19 +423,26 @@ function sampleG(m,lon,lat,z,th,o){
   o.p=w00*m.P[b1+p00]+w10*m.P[b1+p10]+w01*m.P[b1+p01]+w11*m.P[b1+p11]; // precipitation is the sum over the hour ending at b1
   return true;
 }
-// Use the fine grid where and while it covers the point, the wide grid everywhere else.
-function sample(m,lon,lat,z,th,o){ const n=m.nest; if(n&&th<n.nt-1.001&&sampleG(n,lon,lat,z,th,o)) return true; return sampleG(m,lon,lat,z,th,o); }
-const MU=1.81e-5, RHOA=1.2, LAM=0.066e-6, NU=1.5e-5;
-function slip(d){return 1+(2*LAM/d)*(1.257+0.4*Math.exp(-1.1*d/(2*LAM)));}
-function settle(dUm,rho){
-  const d=dUm*1e-6, v0=rho*d*d*GRAV*slip(d)/(18*MU); let v=v0;
-  for(let i=0;i<30;i++){ const re=RHOA*v*d/MU; v=v0/(1+0.15*Math.pow(re,0.687)); }
+// The main grid where it covers the point, the wide coarse grid beyond it.
+function sample(m,lon,lat,z,th,o){ if(sampleG(m,lon,lat,z,th,o)) return true; return m.outer?sampleG(m.outer,lon,lat,z,th,o):false; }
+// Air properties from temperature (K) and pressure (Pa): Sutherland viscosity, ideal-gas density, mean free path.
+function airProps(T,P){
+  T=T>200&&T<330?T:283; P=P>60000&&P<110000?P:99000;
+  const mu=1.716e-5*Math.pow(T/273.15,1.5)*(273.15+110.4)/(T+110.4), rho=P/(287.05*T);
+  const lam=66.5e-9*(101325/P)*(T/293.15)*(1+110.4/293.15)/(1+110.4/T);
+  return {T,P,mu,rho,lam,nu:mu/rho};
+}
+const AIR0=airProps(283,99000);
+function slip(d,air){ const L=(air||AIR0).lam; return 1+(2*L/d)*(1.257+0.4*Math.exp(-1.1*d/(2*L))); }
+function settle(dUm,rho,air){
+  air=air||AIR0; const d=dUm*1e-6, v0=rho*d*d*GRAV*slip(d,air)/(18*air.mu); let v=v0;
+  for(let i=0;i<30;i++){ const re=air.rho*v*d/air.mu; v=v0/(1+0.15*Math.pow(re,0.687)); }
   return v;
 }
 // Turbulent part of dry deposition velocity (m/s), resistance model after Slinn / Seinfeld & Pandis.
-function vdTurb(dUm,vs,ust){
-  const d=dUm*1e-6, D=1.38e-23*275*slip(d)/(3*Math.PI*MU*d), sc=NU/D, st=vs*ust*ust/(GRAV*NU);
-  const ra=Math.log(15/0.1)/(0.4*ust), rb=1/(ust*(Math.pow(sc,-2/3)+Math.pow(10,-3/st)));
+function vdTurb(dUm,vs,ust,air){
+  air=air||AIR0; const d=dUm*1e-6, D=1.380649e-23*air.T*slip(d,air)/(3*Math.PI*air.mu*d), sc=air.nu/D, st=vs*ust*ust/(GRAV*air.nu);
+  const ra=Math.log(15/Z0)/(0.4*ust), rb=1/(ust*(Math.pow(sc,-2/3)+Math.pow(10,-3/st)));
   return 1/(ra+rb+ra*rb*vs);
 }
 function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x));}
@@ -446,37 +483,46 @@ function massForArea(curve,areaM2,levelUgFt2){ // release (kg) that puts areaM2 
 // All outputs are per 1 kg of lead released. Scale by the release mass afterwards.
 function createSim(met,prm){
   const DT=prm.dt||100, FRAME=900, hours=prm.hours||48, nSteps=hours*3600/DT, nPer=prm.nPer||2000, nb=DIAM.length, N=nPer*nb;
-  const frac=binFractions(prm.mmd,2.5), vs=DIAM.map(d=>settle(d,prm.rho)), mult=prm.mult||1;
+  const air=prm.air?airProps(prm.air.T,prm.air.P):AIR0, UST=0.4/Math.log(10/Z0);
+  const frac=binFractions(prm.mmd,2.5), vs=DIAM.map(d=>settle(d,prm.rho,air)), mult=prm.mult||1, TZ=prm.tz||150, AB=prm.above==null?0.3:prm.above, KA=prm.kAbove||0.5;
   const r=rng(prm.seed||7);
   const x=new Float64Array(N),y=new Float64Array(N),z=new Float32Array(N),m=new Float64Array(N),up=new Float32Array(N),vp=new Float32Array(N),alive=new Uint8Array(N).fill(1);
   const cosS=Math.cos(SRC.lat*Math.PI/180), S0=prm.src||SRC;
   for(let i=0;i<N;i++){ const b=(i/nPer)|0; x[i]=S0.lon+150*r.n()/(R*cosS); y[i]=S0.lat+150*r.n()/R; z[i]=1+r.u()*(prm.top-1); m[i]=frac[b]/nPer; }
+  // Air monitors and PM10 / PM2.5 are defined by aerodynamic diameter: physical diameter times the square root of density
+  // relative to water. For lead oxide that is a factor of 3.1, so PM10 means about 3 microns and under.
+  const dae=DIAM.map(d=>d*Math.sqrt(prm.rho/1000));
+  let fineFrac=0, susFrac=0; const isFine=dae.map(v=>v<=10), isSus=dae.map(v=>v<=2.5); frac.forEach((v,b)=>{ if(isFine[b]) fineFrac+=v; if(isSus[b]) susFrac+=v; });
   const nF=Math.round(hours*3600/FRAME)+1, nc=DGRID.nx*DGRID.ny, keep=prm.frames!==false;
   const fPer=Math.min(nPer,prm.show||nPer), fN=fPer*nb; // only this many particles per bin are kept for drawing
   const fx=keep?new Float32Array(nF*fN):null, fy=keep?new Float32Array(nF*fN):null;
-  // Air monitors: fine particles (10 microns and under) in the lowest 50 m within 1.5 km, averaged over each 15 minutes.
-  const mons=prm.monitors||[], nM=mons.length, MONR=prm.monR||1500, MONH=50, monAcc=new Float64Array(nM), monAvg=mons.map(()=>new Float32Array(nF)), monCos=mons.map(q=>Math.cos(q.lat*Math.PI/180)), pm10=DIAM.map(d=>d<=10);
+  // Air monitors: PM10 (10 microns aerodynamic and under) in the lowest 50 m within 1.5 km, averaged over each 15 minutes.
+  const mons=prm.monitors||[], nM=mons.length, MONR=prm.monR||1500, MONH=50, monAcc=new Float64Array(nM), monAvg=mons.map(()=>new Float32Array(nF)), monCos=mons.map(q=>Math.cos(q.lat*Math.PI/180));
   const dep=new Float64Array(nc), depSnap=keep?new Float32Array(SNAP.length*nc):null;
-  const recSfc=RECEPTORS.map(()=>new Float32Array(nF)),recAny=RECEPTORS.map(()=>new Float32Array(nF));
+  const nc2=OGRID.nx*OGRID.ny, dep2=new Float64Array(nc2), dep2Snap=keep?new Float32Array(SNAP.length*nc2):null; // coarse grid, only for deposits outside the main grid
+  const recSfc=RECEPTORS.map(()=>new Float32Array(nF)),recAny=RECEPTORS.map(()=>new Float32Array(nF)),recFine=RECEPTORS.map(()=>new Float32Array(nF)), fineAir=new Float32Array(nF), susAir=new Float32Array(nF);
   const bud=new Float32Array(nF*4), cen=new Float32Array(nF*3); let dry=0,wet=0,exited=0,step=0,snapI=0;
   const TLH=prm.tlh||330; // s. Chosen so crosswind spread follows Draxler (1976, Atmos. Environ. 10, 99-105), Ti = 1000 s, between 1 and 3 hours
   const a=Math.exp(-DT/TLH), bq=Math.sqrt(1-a*a), o={};
   function deposit(lon,lat,kg,isWet){
-    const i=Math.min(DGRID.nx-1,Math.max(0,((lon-GRID.lon0)/DGRID.d)|0)), j=Math.min(DGRID.ny-1,Math.max(0,((lat-GRID.lat0)/DGRID.d)|0));
-    dep[j*DGRID.nx+i]+=kg; if(isWet)wet+=kg; else dry+=kg;
+    if(isWet)wet+=kg; else dry+=kg;
+    if(lon>=GRID.lon0&&lon<LONMAX&&lat>=GRID.lat0&&lat<LATMAX){ dep[(((lat-GRID.lat0)/DGRID.d)|0)*DGRID.nx+(((lon-GRID.lon0)/DGRID.d)|0)]+=kg; return; }
+    const i=Math.min(OGRID.nx-1,Math.max(0,((lon-OUTER.lon0)/OGRID.d)|0)), j=Math.min(OGRID.ny-1,Math.max(0,((lat-OUTER.lat0)/OGRID.d)|0)); dep2[j*OGRID.nx+i]+=kg;
   }
+  // Start each particle with a turbulent velocity drawn from the ambient distribution, so spread is right from the first step.
+  { const th=met.h0; for(let i=0;i<N;i++){ if(!sample(met,x[i],y[i],z[i],th,o))continue; const c=Math.min(4.999,Math.max(0,o.cls)), ci=c|0, iy=IY[ci]+(c-ci)*(IY[ci+1]-IY[ci]), sv=iy*Math.max(1,o.s10)*mult*(z[i]<=o.blh?1:AB); up[i]=sv*r.n(); vp[i]=sv*r.n(); } }
   function record(){
-    const tsec=Math.round(step*DT), f=Math.round(tsec/FRAME); let air=0,sx=0,sy=0;
-    for(let i=0;i<N;i++){ if(alive[i]){air+=m[i];sx+=m[i]*x[i];sy+=m[i]*y[i];} if(keep){ const j=i%nPer; if(j<fPer){ const q=f*fN+((i/nPer)|0)*fPer+j; if(alive[i]){fx[q]=x[i];fy[q]=y[i];} else {fx[q]=NaN;fy[q]=NaN;} } } }
+    const tsec=Math.round(step*DT), f=Math.round(tsec/FRAME); let air=0,sx=0,sy=0,fa=0,sa=0;
+    for(let i=0;i<N;i++){ if(alive[i]){air+=m[i];sx+=m[i]*x[i];sy+=m[i]*y[i]; const b=(i/nPer)|0; if(isFine[b])fa+=m[i]; if(isSus[b])sa+=m[i];} if(keep){ const j=i%nPer; if(j<fPer){ const q=f*fN+((i/nPer)|0)*fPer+j; if(alive[i]){fx[q]=x[i];fy[q]=y[i];} else {fx[q]=NaN;fy[q]=NaN;} } } }
     for(let k=0;k<nM;k++){ monAvg[k][f]=monAcc[k]*1e9/(Math.PI*MONR*MONR*MONH*FRAME); monAcc[k]=0; }
-    bud[f*4]=air;bud[f*4+1]=dry;bud[f*4+2]=wet;bud[f*4+3]=exited;
+    bud[f*4]=air;bud[f*4+1]=dry;bud[f*4+2]=wet;bud[f*4+3]=exited; fineAir[f]=fineFrac>0?fa/fineFrac:0; susAir[f]=susFrac>0?sa/susFrac:0;
     cen[f*3]=air>0?sx/air:NaN;cen[f*3+1]=air>0?sy/air:NaN;
     let far=0; if(air>0){ const ds=[]; for(let i=0;i<N;i++){ if(!alive[i])continue; ds.push(Math.hypot((x[i]-SRC.lon)*R*cosS,(y[i]-SRC.lat)*R)); } ds.sort((p,q)=>p-q); far=ds[Math.floor(ds.length*0.95)]||0; }
     cen[f*3+2]=far;
-    for(let k=0;k<RECEPTORS.length;k++){ const rc=RECEPTORS[k], c=Math.cos(rc.lat*Math.PI/180); let s=0,cm=0;
-      for(let i=0;i<N;i++){ if(!alive[i])continue; const dx=(x[i]-rc.lon)*R*c, dy=(y[i]-rc.lat)*R; if(dx*dx+dy*dy<RREC*RREC){cm+=m[i]; if(z[i]<HREC)s+=m[i];} }
-      recSfc[k][f]=s*1e9/(Math.PI*RREC*RREC*HREC); recAny[k][f]=cm; }
-    while(keep&&snapI<SNAP.length&&Math.round(SNAP[snapI]*3600)<=tsec){ depSnap.set(dep,snapI*nc); snapI++; }
+    for(let k=0;k<RECEPTORS.length;k++){ const rc=RECEPTORS[k], c=Math.cos(rc.lat*Math.PI/180); let s=0,cm=0,sf=0;
+      for(let i=0;i<N;i++){ if(!alive[i])continue; const dx=(x[i]-rc.lon)*R*c, dy=(y[i]-rc.lat)*R; if(dx*dx+dy*dy<RREC*RREC){ const fine=isFine[(i/nPer)|0]; if(fine)cm+=m[i]; if(z[i]<HREC){s+=m[i]; if(fine)sf+=m[i];}} }
+      recSfc[k][f]=s*1e9/(Math.PI*RREC*RREC*HREC); recFine[k][f]=sf*1e9/(Math.PI*RREC*RREC*HREC); recAny[k][f]=fineFrac>0?cm/fineFrac:0; } // share of the released fine dust airborne within RREC, at any height
+    while(keep&&snapI<SNAP.length&&Math.round(SNAP[snapI]*3600)<=tsec){ depSnap.set(dep,snapI*nc); dep2Snap.set(dep2,snapI*nc2); snapI++; }
   }
   record();
   function advance(n){
@@ -487,17 +533,17 @@ function createSim(met,prm){
         const b=(i/nPer)|0, sp=Math.max(1,o.s10); // turbulence scales with the 10 m wind, where the class intensities are defined
         const c=Math.min(4.999,Math.max(0,o.cls)), ci=c|0, cf=c-ci;
         const iy=IY[ci]+cf*(IY[ci+1]-IY[ci]), iz=IZ[ci]+cf*(IZ[ci+1]-IZ[ci]);
-        const inBL=z[i]<=o.blh, sv=iy*sp*mult*(inBL?1:0.3);
+        const inBL=z[i]<=o.blh, sv=iy*sp*mult*(inBL?1:AB);
         up[i]=a*up[i]+bq*sv*r.n(); vp[i]=a*vp[i]+bq*sv*r.n();
         y[i]+=(o.v+vp[i])*DT/R; x[i]+=(o.u+up[i])*DT/(R*Math.cos(y[i]*Math.PI/180));
         let z2;
-        if(inBL){ const sw=Math.max(0.1,iz*sp)*mult, K=sw*sw*150, h=o.blh; z2=z[i]+Math.sqrt(2*K*DT)*r.n(); z2=((z2%(2*h))+2*h)%(2*h); if(z2>h)z2=2*h-z2; }
-        else { z2=z[i]+Math.sqrt(2*0.5*DT)*r.n(); if(z2<0)z2=-z2; }
-        if(z2<30){ const ust=Math.max(0.05,0.0869*o.s10), l=m[i]*(1-Math.exp(-vdTurb(DIAM[b],vs[b],ust)*DT/30)); m[i]-=l; deposit(x[i],y[i],l,false); }
+        if(inBL){ const sw=Math.max(0.1,iz*sp)*mult, K=sw*sw*TZ, h=o.blh; z2=z[i]+Math.sqrt(2*K*DT)*r.n(); z2=((z2%(2*h))+2*h)%(2*h); if(z2>h)z2=2*h-z2; }
+        else { z2=z[i]+Math.sqrt(2*KA*DT)*r.n(); if(z2<0)z2=-z2; }
+        if(z2<30){ const ust=Math.max(0.05,UST*o.s10), l=m[i]*(1-Math.exp(-vdTurb(DIAM[b],vs[b],ust,air)*DT/30)); m[i]-=l; deposit(x[i],y[i],l,false); }
         z2-=vs[b]*DT;
         if(z2<=0){ deposit(x[i],y[i],m[i],false); m[i]=0; alive[i]=0; continue; }
         z[i]=z2;
-        if(nM&&pm10[b]&&z2<MONH){ for(let k=0;k<nM;k++){ const dx=(x[i]-mons[k].lon)*R*monCos[k], dy=(y[i]-mons[k].lat)*R; if(dx*dx+dy*dy<MONR*MONR) monAcc[k]+=m[i]*DT; } }
+        if(nM&&isFine[b]&&z2<MONH){ for(let k=0;k<nM;k++){ const dx=(x[i]-mons[k].lon)*R*monCos[k], dy=(y[i]-mons[k].lat)*R; if(dx*dx+dy*dy<MONR*MONR) monAcc[k]+=m[i]*DT; } }
         if(o.p>0){ const l=m[i]*(1-Math.exp(-8.4e-5*Math.pow(o.p,0.79)*DT)); /* Baklanov and Sorensen (2001), their fit for particles under 2.8 microns */ m[i]-=l; deposit(x[i],y[i],l,true); }
       }
       step++;
@@ -505,11 +551,11 @@ function createSim(met,prm){
     }
     return step>=nSteps;
   }
-  return {advance,get done(){return step>=nSteps;},get progress(){return step/nSteps;},N,nPer,fN,fPer,nF,FRAME,hours,fx,fy,monAvg,dep,depSnap,recSfc,recAny,bud,cen,vs,frac,prm,
-    state:()=>({z,m,alive}),
+  return {advance,get done(){return step>=nSteps;},get progress(){return step/nSteps;},N,nPer,fN,fPer,nF,FRAME,hours,fx,fy,monAvg,dep,depSnap,dep2,dep2Snap,recSfc,recAny,recFine,fineAir,susAir,fineFrac,susFrac,dae,air,bud,cen,vs,frac,prm,
+    state:()=>({x,y,z,m,alive}),
     totals:()=>({dry,wet,exited,air:m.reduce((s,v)=>s+v,0)})};
 }
-g.Core={SRC_SHIFTS,REACH,NEST,NEST_END,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
+g.Core={SRC_SHIFTS,REACH,OUTER,OLATMAX,OLONMAX,OGRID,Z0,pointUrl,airProps,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 
@@ -527,7 +573,7 @@ const EPA_URL='https://services.arcgis.com/cJ9YHowT8TU7DUyn/arcgis/rest/services
 const dark=matchMedia('(prefers-color-scheme: dark)');
 
 /* ---- map ---- */
-const map=L.map('map',{zoomAnimation:false,fadeAnimation:false,zoomSnap:0.25,minZoom:5,maxZoom:11,attributionControl:true});
+const map=L.map('map',{zoomAnimation:false,fadeAnimation:false,zoomSnap:0.25,minZoom:4,maxZoom:11,attributionControl:true});
 const ATTR='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:ATTR,maxZoom:19}).addTo(map);
 function setTiles(){ $('map').classList.toggle('darkmap',dark.matches); }
@@ -579,6 +625,14 @@ function draw(){
           if(j===0||f[(j-1)*bw+i]<lv){ctx.moveTo(xs[i],ys[j]);ctx.lineTo(xs[i+1],ys[j]);} }
         ctx.stroke(); } ctx.setLineDash([]); }
   }
+  // deposits outside the main grid, on the coarse grid
+  if(sim&&sim.dep2Snap&&idx2.length&&showD){ const G=C.OGRID, n2=G.nx*G.ny, th=tMin/60; let s0=0; while(s0<C.SNAP.length-2&&C.SNAP[s0+1]<=th)s0++;
+    const a=Math.min(1,Math.max(0,(th-C.SNAP[s0])/(C.SNAP[s0+1]-C.SNAP[s0]))), lmin=Math.log10(VMIN), lr=Math.log10(VMAX)-lmin, k=M*C.UGFT2;
+    for(const c of idx2){ const j=(c/G.nx)|0, i=c%G.nx, la=C.OUTER.lat0+j*G.d, lo=C.OUTER.lon0+i*G.d, ar=Math.pow(G.d*C.R,2)*Math.cos((la+G.d/2)*Math.PI/180);
+      const v=(sim.dep2Snap[s0*n2+c]*(1-a)+sim.dep2Snap[(s0+1)*n2+c]*a)*k/ar; if(v<VMIN)continue; const x0=X(lo),x1=X(lo+G.d),y0=Y(la+G.d),y1=Y(la); if(x1<0||x0>W||y1<0||y0>H)continue;
+      const t=Math.min(1,(Math.log10(v)-lmin)/lr), tt=t*3, q=Math.min(2,tt|0), fr=tt-q;
+      ctx.fillStyle='rgba('+Math.round(RAMP[q][0]+fr*(RAMP[q+1][0]-RAMP[q][0]))+','+Math.round(RAMP[q][1]+fr*(RAMP[q+1][1]-RAMP[q][1]))+','+Math.round(RAMP[q][2]+fr*(RAMP[q+1][2]-RAMP[q][2]))+','+(0.45+0.4*t).toFixed(2)+')';
+      ctx.fillRect(x0,y0,x1-x0+0.6,y1-y0+0.6); } }
   if(met&&$('lyW').checked){
     const k=+$('wlev').value, th=met.h0+tMin/60, it=Math.min(met.nt-2,th|0), at=th-it;
     ctx.strokeStyle=col.arrow;ctx.fillStyle=col.arrow;ctx.lineWidth=1.3;
@@ -591,9 +645,9 @@ function draw(){
   }
   if(sim&&$('lyP').checked){
     const ff=Math.min(sim.nF-1,tMin*60/sim.FRAME), f0=Math.min(sim.nF-2,ff|0), a=ff-f0, N=sim.fN, nPer=sim.fPer, kx=S/360, ox=S/2-o.x;
-    const cols=[col.fine,col.fine,col.fine,col.mid,col.mid,col.coarse,col.coarse,col.coarse], sz=zm>=8?2.4:1.8;
+    const cols=C.DIAM.map(d=>d<=3?col.fine:d<=10?col.mid:col.coarse), sz=zm>=8?2.4:1.8;
     ctx.globalAlpha=.7;
-    for(let b=0;b<8;b++){ ctx.fillStyle=cols[b];
+    for(let b=0;b<cols.length;b++){ ctx.fillStyle=cols[b];
       for(let i=b*nPer;i<(b+1)*nPer;i++){ const q0=f0*N+i,q1=q0+N, x0=sim.fx[q0]; if(x0!==x0)continue; let x=x0,y=sim.fy[q0]; const x1=sim.fx[q1];
         if(x1===x1){x+=a*(x1-x0);y+=a*(sim.fy[q1]-y);} else if(a>0.5)continue;
         const pxx=kx*x+ox; if(pxx<0||pxx>W)continue; const pyy=Y(y); if(pyy<0||pyy>H)continue; ctx.fillRect(pxx-sz/2,pyy-sz/2,sz,sz); } }
@@ -618,14 +672,14 @@ function draw(){
 (function ramp(){ const c=$('ramp').getContext('2d'); for(let x=0;x<150;x++){const t=x/149*3,k=Math.min(2,t|0),f=t-k;c.fillStyle='rgb('+[0,1,2].map(n=>Math.round(RAMP[k][n]+f*(RAMP[k+1][n]-RAMP[k][n]))).join(',')+')';c.fillRect(x,0,1,9);} })();
 
 /* ---- model run ---- */
-function params(){ return {top:+$('cTop').value,mmd:+$('cMmd').value,rho:+$('cRho').value,mult:+$('cMult').value,hours:48,nPer:1500,show:1500,seed:7,dt:50,monitors:epa?epa.stations.map(q=>({lat:q.lat,lon:q.lon})):[]}; }
+function params(){ return {top:+$('cTop').value,mmd:+$('cMmd').value,rho:+$('cRho').value,mult:+$('cMult').value,hours:48,nPer:1200,show:1200,seed:7,dt:50,air:airPt,monitors:epa?epa.stations.map(q=>({lat:q.lat,lon:q.lon})):[]}; }
 function showCtl(){
   $('vMass').textContent=sig(M)+' kg ('+sig(M/3200*100)+'% of about 3,200 kg)';
   $('vTop').textContent=$('cTop').value+' m'; $('vMmd').textContent=$('cMmd').value+' µm'; $('vMult').textContent='×'+(+$('cMult').value).toFixed(1);
 }
 function msg(t){ $('mapmsg').hidden=!t; $('mapmsg').textContent=t||''; }
 const coreSrc=document.getElementById('core').textContent;
-function makeWorker(){ try{ const src=coreSrc+';onmessage=function(e){var d=e.data,s=Core.createSim(d.met,d.prm);while(!s.advance(40))postMessage({id:d.id,p:s.progress});if(d.prm.lite){postMessage({id:d.id,done:1,monAvg:s.monAvg,nF:s.nF,FRAME:s.FRAME});return;}postMessage({id:d.id,done:1,fN:s.fN,fPer:s.fPer,nF:s.nF,FRAME:s.FRAME,fx:s.fx,fy:s.fy,dep:s.dep,depSnap:s.depSnap,recSfc:s.recSfc,recAny:s.recAny,bud:s.bud,cen:s.cen,monAvg:s.monAvg,prm:d.prm},[s.fx.buffer,s.fy.buffer,s.dep.buffer,s.depSnap.buffer,s.bud.buffer,s.cen.buffer]);};';
+function makeWorker(){ try{ const src=coreSrc+';onmessage=function(e){var d=e.data,s=Core.createSim(d.met,d.prm);while(!s.advance(40))postMessage({id:d.id,p:s.progress});if(d.prm.lite){postMessage({id:d.id,done:1,monAvg:s.monAvg,nF:s.nF,FRAME:s.FRAME});return;}postMessage({id:d.id,done:1,fN:s.fN,fPer:s.fPer,nF:s.nF,FRAME:s.FRAME,fx:s.fx,fy:s.fy,dep:s.dep,depSnap:s.depSnap,dep2:s.dep2,dep2Snap:s.dep2Snap,recSfc:s.recSfc,recAny:s.recAny,recFine:s.recFine,fineAir:s.fineAir,susAir:s.susAir,fineFrac:s.fineFrac,susFrac:s.susFrac,bud:s.bud,cen:s.cen,monAvg:s.monAvg,prm:d.prm},[s.fx.buffer,s.fy.buffer,s.dep.buffer,s.depSnap.buffer,s.dep2.buffer,s.dep2Snap.buffer,s.bud.buffer,s.cen.buffer]);};';
   return new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'}))); }catch(e){ return null; } }
 function runPass(nPer,extra){ return new Promise(res=>{ const id=++passId, prm=Object.assign(params(),{nPer},extra||{});
   if(worker){worker.terminate();worker=null;} worker=makeWorker();
@@ -639,8 +693,8 @@ function accept(s){
   bbox=i1<0?null:{i0:Math.max(0,i0-1),i1:Math.min(D.nx-1,i1+1),j0:Math.max(0,j0-1),j1:Math.min(D.ny-1,j1+1)};
   smFinal=C.smoothLoad(sim.dep); curve=C.areaCurve(smFinal); pkLoad=0; for(let c=0;c<smFinal.length;c++) if(smFinal[c]>pkLoad)pkLoad=smFinal[c];
   const hi=C.massForArea(curve,C.ARMY.hi.areaMi2*C.MI2,C.ARMY.hi.level), lo=C.massForArea(curve,C.ARMY.lo.areaMi2*C.MI2,C.ARMY.lo.level);
-  fits={hi,lo,army:Math.sqrt(hi*lo),epa:null,epaBest:null,fine:0};
-  C.binFractions(sim.prm.mmd,2.5).forEach((v,b)=>{ if(C.DIAM[b]<=10) fits.fine+=v; });
+  fits={hi,lo,army:Math.sqrt(hi*lo),epa:null,epaBest:null,fine:sim.fineFrac||0};
+  idx2=[]; if(sim.dep2) for(let c=0;c<sim.dep2.length;c++) if(sim.dep2[c]>0) idx2.push(c);
   const c=monLimit(sim); if(c){ fits.dose=c.dm; fits.doseSd=c.sd; fits.epaBest=c.best; fits.epaC=c.up; }
   finishFits();
   applyBasis();
@@ -665,17 +719,17 @@ function finishFits(){
 }
 async function run(){
   if(!met)return; const my=++runId; ensUps=null; msg('Running particles…'); $('refine').hidden=true;
-  let s=await runPass(1500); if(my!==runId)return; if(!s){ msg('The model run failed. Press Refresh now.'); return; }
+  let s=await runPass(1200); if(my!==runId)return; if(!s){ msg('The model run failed. Press Refresh now.'); return; }
   accept(s); msg('');
-  if(worker){ $('refine').hidden=false; $('refine').textContent='Refining with 48,000 particles…'; s=await runPass(6000); if(my!==runId)return; if(s)accept(s);
+  if(worker){ $('refine').hidden=false; $('refine').textContent='Refining with 48,000 particles…'; s=await runPass(4800); if(my!==runId)return; if(s)accept(s);
     if(epa&&fits&&fits.epaC){ $('refine').textContent='Checking how much the detonation point matters…'; const ups=[];
-      for(const sh of C.SRC_SHIFTS){ const r=await runPass(2000,{lite:true,frames:false,src:{lat:C.SRC.lat+sh[0],lon:C.SRC.lon+sh[1]}}); if(my!==runId)return; const c=monLimit(r); if(c)ups.push(c.up); }
+      for(const sh of C.SRC_SHIFTS){ const r=await runPass(800,{lite:true,frames:false,src:{lat:C.SRC.lat+sh[0],lon:C.SRC.lon+sh[1]}}); if(my!==runId)return; const c=monLimit(r); if(c)ups.push(c.up); }
       if(ups.length===C.SRC_SHIFTS.length){ ensUps=ups; finishFits(); applyBasis(); summarize(); update(); } }
     $('refine').hidden=true; }
   else if(!ensNA){ ensNA=true; summarize(); }
   $('prog').style.width='0';
 }
-let pkLoad=0;
+let pkLoad=0, idx2=[], airPt=null, wx=null, obs=null;
 function setScale(){ const pk=pkLoad*M*C.UGFT2; VMAX=Math.pow(10,Math.ceil(Math.log10(Math.max(pk,1e-9)))); if(VMAX>500&&VMAX<5000)VMAX=500; VMIN=VMAX/1e4; const tk=v=>String(+v.toPrecision(2)); $('rt0').textContent=tk(VMIN); $('rt1').textContent=tk(VMAX/100); $('rt2').textContent=tk(VMAX); }
 function applyBasis(){
   if(!fits)return;
@@ -687,12 +741,14 @@ function applyBasis(){
 function summarize(){
   if(!sim)return; const nF=sim.nF, D=C.DGRID;
   recStats=C.RECEPTORS.map((r,k)=>{
-    let any=-1,peak=0,pf=0; for(let f=0;f<nF;f++){ if(any<0&&sim.recAny[k][f]>=C.REACH)any=f; const v=sim.recSfc[k][f]; if(v>peak){peak=v;pf=f;} }
+    let any=-1,peak=0,pf=0,peakFine=0; for(let f=0;f<nF;f++){ if(any<0&&sim.recAny[k][f]>=C.REACH)any=f; const v=sim.recSfc[k][f]; if(v>peak){peak=v;pf=f;} if(sim.recFine&&sim.recFine[k][f]>peakFine)peakFine=sim.recFine[k][f]; }
     let kg=0,ar=0; const c=Math.cos(r.lat*Math.PI/180);
     const jc=Math.round((r.lat-C.GRID.lat0)/D.d), ic=Math.round((r.lon-C.GRID.lon0)/D.d), sp=Math.ceil(C.RREC/(D.d*C.R*c))+1;
     for(let j=Math.max(0,jc-sp);j<=Math.min(D.ny-1,jc+sp);j++){ const lat=C.GRID.lat0+(j+0.5)*D.d,dy=(lat-r.lat)*C.R;
       for(let i=Math.max(0,ic-sp);i<=Math.min(D.nx-1,ic+sp);i++){ const dx=(C.GRID.lon0+(i+0.5)*D.d-r.lon)*C.R*c; if(dx*dx+dy*dy>C.RREC*C.RREC)continue; kg+=sim.dep[j*D.nx+i]; ar+=C.cellArea(j);} }
-    return {any,peak,pf,dep:ar?kg/ar*C.UGFT2:0,dist:distBear(r.lat,r.lon).km};
+    if(!(r.lon>=C.GRID.lon0&&r.lon<C.LONMAX&&r.lat>=C.GRID.lat0&&r.lat<C.LATMAX)&&sim.dep2){ const G=C.OGRID, j0=Math.round((r.lat-C.OUTER.lat0)/G.d), i0=Math.round((r.lon-C.OUTER.lon0)/G.d); kg=0; ar=0;
+      for(let j=Math.max(0,j0-3);j<=Math.min(G.ny-1,j0+3);j++){ const lat=C.OUTER.lat0+(j+0.5)*G.d, dy=(lat-r.lat)*C.R; for(let i=Math.max(0,i0-3);i<=Math.min(G.nx-1,i0+3);i++){ const dx=(C.OUTER.lon0+(i+0.5)*G.d-r.lon)*C.R*c; if(dx*dx+dy*dy>C.RREC*C.RREC)continue; kg+=sim.dep2[j*G.nx+i]; ar+=Math.pow(G.d*C.R,2)*Math.cos(lat*Math.PI/180); } } }
+    return {any,peak,pf,peakFine,dep:ar?kg/ar*C.UGFT2:0,dist:distBear(r.lat,r.lon).km};
   });
   const order=C.RECEPTORS.map((r,k)=>k).sort((a,b)=>{const A=recStats[a],B=recStats[b]; if((A.any>=0)!==(B.any>=0))return A.any>=0?-1:1; return A.any>=0?(A.any-B.any)||(A.dist-B.dist):A.dist-B.dist;});
   const tb=$('rows'); tb.innerHTML='';
@@ -712,7 +768,7 @@ function fitCard(){
   const army=sig(fits.army)+' kg', e=fits.epa?sig(fits.epa)+' kg':'', ec=fits.epaC?sig(fits.epaC)+' kg':'', ef=fits.epaC?sig(fits.epaC*fits.fine)+' kg':'';
   const clear=fits.epaC&&fits.dose>2*fits.doseSd;
   let mon='';
-  if(fits.epaC){ mon=(clear?'The EPA monitors recorded lead above their background. ':'The EPA monitors show no clear lead signal above their background. ')+'For a detonation at the assumed point, that caps the release at about '+ec+' ('+ef+' of it fine dust, 10 µm and under). ';
+  if(fits.epaC){ mon=(clear?'The EPA monitors recorded lead above their background. ':'The EPA monitors show no clear lead signal above their background. ')+'For a detonation at the assumed point, that caps the release at about '+ec+' ('+ef+' of it PM10-size dust, the part the monitors can sample). ';
     if(fits.epaWide) mon+='The detonation point is not public. If it was up to 3 km away, '+(fits.epaWide>=3199?'the modeled plume passes beside the monitors and they set no limit at all':'the cap rises to about '+sig(fits.epaWide)+' kg')+(fits.epaWide>=fits.army?'. So the monitors cannot rule out the Army planning case, and this page shows that high case.':'.');
     else mon+=ensNA?'This browser cannot run the check on the detonation point, so the page shows the Army high case.':'Checking how much the unknown detonation point changes that. Until then the page shows the Army high case.'; }
   $('fitHead').textContent=basis==='epa'?mon+' Release shown: '+e+'. The Army planning map implies about '+army+'.'
@@ -723,7 +779,7 @@ function fitCard(){
   rows.push(['Release that matches the Army map',army],['Area above 100 µg/ft² at this release',aHi.toFixed(0)+' sq mi (Army map: 29)'],['Area above 5 µg/ft² at this release',aLo.toFixed(0)+' sq mi (Army map: 186)'],['Highest modeled deposit',sig(pkLoad*M*C.UGFT2)+' µg/ft²']);
   if(epa) rows.push(['EPA readings used',nRead+' from '+epa.stations.length+' monitors, latest '+fmtCST(epa.tEnd,true)]);
   kvFill('fitKv',rows);
-  $('fitNote').textContent=(epa?'Model peak is a 15 minute average of fine particles (10 µm and under) near the ground within 1.5 km of the monitor. The limit is the measured dose above each monitor\u2019s pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram. It assumes the monitors sample particles up to 10 µm, which EPA has not confirmed on its public pages. The four monitors lie on a line that points back to within 1 km of the assumed detonation point, but that is an inference. The wider limit repeats the calculation with the detonation point moved 3 km north, south, east and west and takes the largest. Four ground monitors can also miss coarse dust that falls near the site and a plume that passes overhead, so even the wider limit is not a guarantee. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map, which is a forecast, and it is the high case.';
+  $('fitNote').textContent=(epa?'Model peak is a 15 minute average of PM10-size particles (10 µm aerodynamic diameter and under, about 3 µm for lead oxide) near the ground within 1.5 km of the monitor. The limit is the measured dose above each monitor\u2019s pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram. It assumes the monitors have PM10 inlets, which EPA has not confirmed on its public pages. The four monitors lie on a line that points back to within 1 km of the assumed detonation point, but that is an inference. The wider limit repeats the calculation with the detonation point moved 3 km north, south, east and west and takes the largest. Four ground monitors can also miss coarse dust that falls near the site and a plume that passes overhead, so even the wider limit is not a guarantee. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map, which is a forecast, and it is the high case.';
 }
 function markSel(){ document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.k===selRec)); }
 function drawChart(){
@@ -747,11 +803,12 @@ function update(){
     $('bAir').textContent=pct(v[0]);$('bDry').textContent=pct(v[1]);$('bWet').textContent=pct(v[2]);$('bExit').textContent=pct(v[3]);
     $('sumT').textContent='at '+fmtDur(tMin);
     const cx=sim.cen[f*3],cy=sim.cen[f*3+1], rows=[];
-    if(v[0]<0.005||cx!==cx){ $('sumHead').textContent=v[3]>0.5?'Most of the modeled lead has left the map area.':'Nearly all the modeled lead is on the ground by this time.'; }
+    if(v[0]<1e-5||cx!==cx){ $('sumHead').textContent=v[3]>0.5?'Most of the modeled lead has left the map area.':'All the modeled lead is on the ground or has left the map by this time.'; }
     else { const db=distBear(cy,cx); let best=0,bd=1e9; C.RECEPTORS.forEach((r,k)=>{const d=Math.hypot((r.lon-cx)*C.R*Math.cos(cy*Math.PI/180),(r.lat-cy)*C.R); if(d<bd){bd=d;best=k;}});
-      $('sumHead').textContent=db.km<3?'The dust cloud is over the detonation site.':'The airborne dust is centered '+db.km.toFixed(0)+' km '+compass(db.b)+' of the site, '+(bd<15000?'over ':(bd/1000).toFixed(0)+' km from ')+C.RECEPTORS[best].name.split(',')[0]+'.';
+      $('sumHead').textContent=db.km<3?'The dust cloud is over the detonation site.':'The dust still airborne is centered '+db.km.toFixed(0)+' km '+compass(db.b)+' of the site, '+(bd<15000?'over ':(bd/1000).toFixed(0)+' km from ')+C.RECEPTORS[best].name.split(',')[0]+'.';
       rows.push(['Leading edge',(sim.cen[f*3+2]/1000).toFixed(0)+' km from the site']); }
     rows.push(['Still airborne',sig(v[0]*M)+' kg of '+sig(M)+' kg']);
+    if(sim.fineAir) rows.push(['PM10-size dust still airborne',pct(sim.fineAir[f])+' of '+sig(sim.fineFrac*M)+' kg'],['PM2.5-size dust still airborne',pct(sim.susAir[f])+' of '+sig(sim.susFrac*M)+' kg']);
     const reached=recStats.filter(s=>s.any>=0&&s.any<=f).length; rows.push(['Listed towns reached so far',reached+' of '+C.RECEPTORS.length]);
     kvFill('sumKv',rows);
   }
@@ -759,6 +816,7 @@ function update(){
     const o={}, th=met.h0+tMin/60, dir=(u,v)=>((Math.atan2(-u,-v)*180/Math.PI)+360)%360, rows=[];
     [[10,'10 m'],[180,'180 m'],[1000,'1000 m']].forEach(([z,l])=>{C.sample(met,C.SRC.lon,C.SRC.lat,z,th,o);rows.push(['Wind over the site, '+l,'from '+compass(dir(o.u,o.v))+' ('+dir(o.u,o.v).toFixed(0).padStart(3,'0')+'°) at '+Math.hypot(o.u,o.v).toFixed(1)+' m/s']);});
     rows.push(['Boundary layer height',o.blh.toFixed(0)+' m'],['Stability class','ABCDEF'[Math.round(o.cls)]],['Precipitation',o.p.toFixed(1)+' mm/h']);
+    if(wx) rows.push(['Air temperature and pressure used',(wx.T-273.15).toFixed(1)+' °C, '+(wx.P/100).toFixed(0)+' hPa'],['Forecast at the site over the 48 h',wx.rain.toFixed(1)+' mm rain, '+wx.snow.toFixed(1)+' cm snow']);
     kvFill('siteKv',rows);
   }
   draw(); drawChart();
@@ -771,7 +829,7 @@ function setStatus(){
   const now=Date.now(), age=Math.round((now-fetchedAt)/60000), pill=$('src');
   if(now-fetchedAt>STALE_MS){ if(met) clearAll('The weather data is over 90 minutes old and refreshing is failing. Results are hidden until it reloads.'); pill.className='pill bad'; pill.textContent='No current weather'; $('srcnote').textContent='Last successful fetch was '+fmtCST(fetchedAt)+'.'; return; }
   pill.className='pill'+(failAt?' bad':''); pill.textContent=failAt?'Refresh failed':'Live weather';
-  $('srcnote').textContent='Open-Meteo fetched '+fmtCST(fetchedAt,true)+' ('+(age<1?'just now':age+' min ago')+').'+(failAt?' The last refresh failed and will be retried.':' Refreshes every 30 minutes.');
+  $('srcnote').textContent='Open-Meteo fetched '+fmtCST(fetchedAt,true)+' ('+(age<1?'just now':age+' min ago')+').'+(failAt?' The last refresh failed and will be retried.':' Refreshes every 30 minutes.')+(met&&!met.outer?' The wide grid did not load, so dust is only followed inside the main map this time.':'');
   const frac=Math.max(0,Math.min(1,(fetchedAt-C.T0)/(48*3600e3))); $('fcfill').style.width=(frac*100)+'%';
   $('fcnote').textContent=frac>=1?'All 48 hours are in the past, so every hour uses the latest analysis from the weather model.':'The first '+(frac*48).toFixed(1)+' h had already happened when the weather was fetched. Everything after is forecast and will shift as it updates.';
 }
@@ -780,11 +838,19 @@ let metAt=0;
 async function getMet(url){
   try{ const pr=await fetch('/api/weather?q='+encodeURIComponent(url.split('?')[1])); if(pr.ok){ const at=+pr.headers.get('x-fetched-at'), j=await pr.json(); if(Array.isArray(j)){ const t=at>0&&at<=Date.now()+60000?Math.min(at,Date.now()):Date.now(); metAt=metAt?Math.min(metAt,t):t; return j; } } }catch(e){}
   const r=await fetch(url,{cache:'no-store'}); metAt=metAt?Math.min(metAt,Date.now()):Date.now(); if(!r.ok){ let why=''; try{ why=String((await r.json()).reason||''); }catch(e){} const err=new Error(r.status===429?'Open-Meteo is limiting requests from your connection.':'Open-Meteo returned HTTP '+r.status+'.'); err.wait=r.status===429?(/hour/i.test(why)?600000:/day/i.test(why)?3600000:65000):0; throw err; } return r.json(); }
+// Site temperature and pressure for air properties, plus rain and snow totals. One small request, sent first.
+async function loadPoint(){
+  try{ const r=await fetch(C.pointUrl(),{cache:'no-store'}); if(!r.ok)throw 0; const h=(await r.json()).hourly, mean=a=>{ let s=0,n=0; a.forEach(v=>{ if(v!=null){s+=v;n++;} }); return n?s/n:NaN; }, sum=a=>a.reduce((x,y)=>x+(y||0),0);
+    const T=mean(h.temperature_2m)+273.15, P=mean(h.surface_pressure)*100; if(!(T>200&&T<330&&P>60000&&P<110000))throw 0;
+    airPt={T,P}; wx={T,P,rain:sum(h.rain),snow:sum(h.snowfall)};
+  }catch(e){ airPt=null; wx=null; }
+}
 async function loadMet(){
   if(!met){ $('src').className='pill'; $('src').textContent='Loading weather'; }
   try{
+    await loadPoint();
     metAt=0; const m=C.parseMet(await getMet(C.metUrl()));
-    try{ m.nest=C.parseMet(await getMet(C.metUrl(C.NEST,C.NEST_END)),C.NEST,12); }catch(e){ m.nest=null; }
+    try{ m.outer=C.parseMet(await getMet(C.metUrl(C.OUTER,true)),C.OUTER); }catch(e){ m.outer=null; }
     met=m; fetchedAt=metAt||Date.now(); failAt=0; setStatus(); update(); return true;
   }catch(e){
     failAt=Date.now();
@@ -793,6 +859,30 @@ async function loadMet(){
     if(e&&e.wait){ if(!met)$('srcnote').textContent='Open-Meteo is limiting requests from your connection (its free tier allows about eight loads an hour). Trying again automatically in '+(e.wait>120000?Math.round(e.wait/60000)+' minutes.':'about a minute.'); clearTimeout(retryT); retryT=setTimeout(refreshAll,e.wait); }
     return false;
   }
+}
+// Forecast check: model 10 m wind against National Weather Service airport observations since the detonation.
+const OBS_ST=['KBRL','KFSW','KEOK','KUIN','KIRK','KOTM','KCOU','KSGF'];
+async function loadObs(){
+  if(!met)return; const out=[], o={}, start=new Date(C.T0).toISOString().slice(0,19)+'Z';
+  await Promise.all(OBS_ST.map(async id=>{ try{
+    const r=await fetch('https://api.weather.gov/stations/'+id+'/observations?start='+encodeURIComponent(start)+'&limit=300',{headers:{Accept:'application/geo+json'}}); if(!r.ok)return; const j=await r.json(); if(!j||!Array.isArray(j.features)||!j.features.length)return;
+    let n=0,sm=0,so=0,de=0;
+    j.features.forEach(ft=>{ const pr=ft.properties||{}, g=ft.geometry&&ft.geometry.coordinates, t=Date.parse(pr.timestamp), ws=pr.windSpeed&&pr.windSpeed.value, wd=pr.windDirection&&pr.windDirection.value;
+      if(!g||!isFinite(t)||t<C.T0||t>C.T0+48*3600e3||ws==null||wd==null||!isFinite(ws)||!isFinite(wd))return;
+      let v=+ws; const u=String(pr.windSpeed.unitCode||''); if(u.indexOf('km_h')>=0)v/=3.6; else if(u.indexOf('m_s')<0)return; if(v<1.5)return; // light winds have no reliable direction
+      if(!C.sample(met,+g[0],+g[1],10,met.h0+(t-C.T0)/3600e3,o))return;
+      const md=((Math.atan2(-o.u,-o.v)*180/Math.PI)+360)%360; let d=Math.abs(md-wd)%360; if(d>180)d=360-d;
+      n++; sm+=Math.hypot(o.u,o.v); so+=v; de+=d; });
+    if(n>=3) out.push({id:id.slice(0,6),n,sm:sm/n,so:so/n,de:de/n}); }catch(e){} }));
+  obs=out.length?out.sort((a,b)=>OBS_ST.indexOf(a.id)-OBS_ST.indexOf(b.id)):null; obsCard();
+}
+function obsCard(){
+  const tb=$('obsRows'); tb.innerHTML='';
+  if(!obs){ $('obsHead').textContent='Airport observations could not be loaded right now.'; return; }
+  let n=0,sm=0,so=0,de=0; obs.forEach(q=>{ n+=q.n; sm+=q.sm*q.n; so+=q.so*q.n; de+=q.de*q.n;
+    const tr=document.createElement('tr'); tr.style.cursor='default'; [q.id,String(q.n),q.sm.toFixed(1)+' / '+q.so.toFixed(1),q.de.toFixed(0)+'°'].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);}); tb.appendChild(tr); });
+  const bias=(sm-so)/n;
+  $('obsHead').textContent='Across '+n+' readings at '+obs.length+' airports since the detonation, the model wind direction is off by '+(de/n).toFixed(0)+'° on average and its speed is '+Math.abs(bias).toFixed(1)+' m/s '+(bias>=0?'higher':'lower')+' than observed.';
 }
 // Live readings from the EPA real-time lead monitors. Never kept between refreshes.
 async function loadEPA(){
@@ -830,7 +920,7 @@ async function loadArmy(){
   }catch(e){ fail(); }
 }
 let refreshing=false, retryT=0;
-async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); if(r[0]) run(); else if(sim){ accept(sim); } }finally{ refreshing=false; } }
+async function refreshAll(){ if(refreshing)return; refreshing=true; loadArmy(); try{ const r=await Promise.all([loadMet(),loadEPA()]); if(r[0]){ run(); loadObs(); } else if(sim){ accept(sim); } }finally{ refreshing=false; } }
 
 /* ---- town selection ---- */
 function durWords(min){ if(min<60)return Math.round(min)+' minutes'; const h=Math.floor(min/60), m=Math.round(min%60); return m?h+' h '+m+' min':h+(h===1?' hour':' hours'); }
@@ -844,7 +934,7 @@ function townCard(){
   else { const am=s.any*sim.FRAME/60;
     head.textContent=am<1?nm+' is inside the first dust cloud right at the detonation.':'The modeled dust reaches '+nm+' about '+durWords(am)+' after the detonation.';
     rows.push(['First arrival',fmtCST(C.T0+am*60000)]);
-    if(s.peak>0) rows.push(['Peak lead in air near the ground',sig(s.peak*M)+' µg/m³'],['Time of that peak',fmtCST(C.T0+s.pf*sim.FRAME*1000)]); else rows.push(['Near the ground','the dust stays above 100 m']);
+    if(s.peak>0) rows.push(['Peak lead in air near the ground',sig(s.peak*M)+' µg/m³'],['Of which PM10-size',sig(s.peakFine*M)+' µg/m³'],['Time of that peak',fmtCST(C.T0+s.pf*sim.FRAME*1000)]); else rows.push(['Near the ground','the dust stays above 100 m']);
     go.hidden=false; }
   rows.push(['Lead left on the ground after 48 h',(s.dep>0?sig(s.dep*M):'0')+' µg/ft²']);
   kvFill('townKv',rows);
@@ -855,7 +945,7 @@ function selectTown(k,keepView){
   if(!keepView){ if(k>=0){ const r=C.RECEPTORS[k]; map.fitBounds(L.latLngBounds([[C.SRC.lat,C.SRC.lon],[r.lat,r.lon]]).pad(0.45),{maxZoom:9}); } else map.fitBounds(HOME); }
   draw(); drawChart();
 }
-(function fillTowns(){ const names={IA:'Iowa',IL:'Illinois',MO:'Missouri',KS:'Kansas',NE:'Nebraska'}, groups={};
+(function fillTowns(){ const names={IA:'Iowa',IL:'Illinois',MO:'Missouri',KS:'Kansas',NE:'Nebraska',OK:'Oklahoma',AR:'Arkansas',TN:'Tennessee',LA:'Louisiana',MS:'Mississippi',AL:'Alabama',FL:'Florida'}, groups={};
   C.RECEPTORS.forEach((r,k)=>{ const st=r.name.split(', ')[1]; (groups[st]=groups[st]||[]).push([r.name.split(',')[0],k]); });
   Object.keys(names).forEach(st=>{ if(!groups[st])return; const og=document.createElement('optgroup'); og.label=names[st];
     groups[st].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([n,k])=>{ const o=document.createElement('option'); o.value=String(k); o.textContent=n; og.appendChild(o); }); $('townSel').appendChild(og); }); })();

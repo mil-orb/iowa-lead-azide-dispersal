@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.4.0 (2026-11-25)
+
+Second audit, aimed at following suspended dust on forecast winds.
+
+- Fine dust is now defined by aerodynamic diameter, as air monitors define it. For lead oxide, PM10 is about 3 µm physical and under. The old definition (10 µm physical) overstated what the monitors could see by a factor of about twenty.
+- Ten size bins from 0.2 to 80 µm, with separate readouts for PM10-size and PM2.5-size dust.
+- A wide weather grid follows fine dust after it leaves the main grid. Before this, the finest dust left the map at about 18 hours and was dropped.
+- Daytime stability from EPA's solar radiation table and night-time from Turner's key, both tested against the EPA tables.
+- Air viscosity, density and mean free path from the forecast temperature and pressure.
+- Wind interpolated in the logarithm of height, with the log law below 10 m.
+- Particles start with turbulent velocities drawn from the surrounding air.
+- A live check of model wind against National Weather Service airport observations.
+- A town counts as reached on the share of PM10-size dust nearby. 20 towns added along the path to the Gulf coast.
+- The fine weather grid near the site was dropped to stay inside Open-Meteo's request limits.
+
 ## 1.3.0 (2026-11-25)
 
 - References for every formula and constant in the README, with the project's own unsourced choices listed separately.
