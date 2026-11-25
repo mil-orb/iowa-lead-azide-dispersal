@@ -8,6 +8,8 @@ Physics and statistics audit.
 - Horizontal memory time changed from 1,000 s to 330 s. Crosswind spread was about 55% wider than Draxler's 1976 curve and is now within 7% between one and three hours.
 - The EPA monitor fit is reported as an upper limit with its noise, and no longer clips negative differences (which had biased it upward).
 - A town counts as reached at one ten-thousandth of the release airborne within 20 km, so the answer no longer depends on particle count.
+- The monitor limit is repeated for detonation points 3 km north, south, east and west, and the page uses the largest, capped at the Army case. Monitor comparison radius cut from 3 km to 1.5 km.
+- Default cloud top and median particle size refitted to the Army contours under the corrected spread: 300 m and 30 µm.
 - New analytic tests: even vertical mixing, exponential decay of airborne mass, and crosswind spread.
 
 ## 1.1.0 (2026-11-25)

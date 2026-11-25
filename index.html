@@ -228,7 +228,7 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
         <h2>Checked against measurements</h2>
         <p class="tiny" style="margin:4px 0 8px">What sets the amount of lead released:</p>
         <div class="basis" role="radiogroup" aria-label="What sets the amount of lead released">
-          <label class="chip"><input type="radio" name="basis" value="epa" checked> EPA monitors (upper limit)</label>
+          <label class="chip"><input type="radio" name="basis" value="epa" checked> EPA monitor limit</label>
           <label class="chip"><input type="radio" name="basis" value="army"> Army planning map</label>
           <label class="chip"><input type="radio" name="basis" value="custom"> Custom</label>
         </div>
@@ -247,9 +247,9 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
           <label class="r" for="cMass">Lead released to the air <span class="v" id="vMass"></span>
             <input id="cMass" type="range" min="-3" max="3.5" step="0.01" value="0"></label>
           <label class="r" for="cTop">Top of the initial dust cloud <span class="v" id="vTop"></span>
-            <input id="cTop" type="range" min="50" max="1500" step="25" value="100"></label>
+            <input id="cTop" type="range" min="50" max="1500" step="25" value="300"></label>
           <label class="r" for="cMmd">Mass median particle diameter <span class="v" id="vMmd"></span>
-            <input id="cMmd" type="range" min="0.5" max="40" step="0.5" value="25"></label>
+            <input id="cMmd" type="range" min="0.5" max="40" step="0.5" value="30"></label>
           <label class="r" for="cRho">Particle material
             <select id="cRho"><option value="9500">Lead oxide fume, 9.5 g/cm³</option><option value="11340">Lead metal, 11.3 g/cm³</option><option value="2650">Lead on soil dust, 2.65 g/cm³</option></select></label>
           <label class="r" for="cMult">Turbulence multiplier <span class="v" id="vMult"></span>
@@ -268,8 +268,8 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 7%,transparent)}
       <li><b>Turbulent spread.</b> A Pasquill class (A to F) is set each hour at each grid point from 10 m wind, sunlight and cloud cover (Turner's method). The class gives turbulence intensity, which is multiplied by the 10 m wind. For class D that equals the standard neutral surface-layer values (2.0 and 1.3 times the friction velocity). Horizontal spread is a correlated random walk whose memory time (330 s) is set so the crosswind width follows Draxler's 1976 curve between one and three hours. Vertical mixing is a random walk that reflects at the ground and at the boundary layer top. When the boundary layer drops at night, particles above it stay aloft in weak turbulence.</li>
       <li><b>Dry deposition.</b> Particles that settle to the ground deposit all their mass. Particles in the lowest 30 m also lose mass at a deposition velocity from a resistance model (aerodynamic plus surface-layer resistance, with Brownian diffusion and impaction, friction velocity from the 10 m wind over 0.1 m roughness).</li>
       <li><b>Wet deposition.</b> In rain, each particle loses mass at 8.4×10⁻⁵ × (mm/h)^0.79 per second.</li>
-      <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 3 km, in 15 minute averages) and compares the totals.</li>
-      <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is an upper limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The other is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The monitor limit only constrains fine dust that passed the monitors near the ground. The cloud top (100 m), the particle sizes (25 µm median) and the detonation point (taken as the plant, which is several km across) are assumptions.</li>
+      <li><b>Measurements.</b> EPA runs four real-time lead monitors along the plume path, 6 to 43 km southwest of the site, and publishes their readings. The page reads them live. The model tracks what each monitor would see (fine particles, 10 µm and under, near the ground within 1.5 km, in 15 minute averages) and compares the totals.</li>
+      <li><b>Source.</b> Nobody has published how much lead left the site, so the release is bounded from data, two ways. The default is a limit from the EPA monitors: the dose they recorded above their pre-detonation average, plus two standard errors of the background noise, divided by the dose the model puts at the same monitors per kilogram released. The exact detonation point is not public and the plant is several km across, so the calculation is repeated with the point moved 3 km in four directions, and the page uses the largest result (never more than the Army case). The other way is the Army pre-detonation map: the release at which the modeled deposition covers the same areas as its two contours. That map is a planning forecast and is the high case. The cloud top (300 m) and particle sizes (30 µm median) are assumptions, chosen because they come closest to reproducing both Army contours.</li>
       <li><b>Checks.</b> Automated tests confirm that mass is conserved, that settling speeds match hand calculations, that a dust layer mixes to an even profile and stays even, that airborne mass decays at the rate the settling and deposition speeds imply, and that crosswind spread follows Draxler's curve within 20%. On the Nov 25 weather the modeled track (southwest, about 135 km out after five hours) lines up with the time markers on the Army dispersion map.</li>
       <li><b>Readouts.</b> A town counts as reached once one ten-thousandth of the released lead is airborne within 20 km of it. "Peak air" is the average over a 20 km radius and the lowest 100 m. "On ground" is the average over the same radius. Both are smoothed and will miss local hot spots. The Army's dispersion map draws its air contour at 0.18 µg/m³, the detection limit of its air sampling method.</li>
       <li><b>Weak points.</b> Hours after the fetch time are forecast. The weather grid is about 50 by 65 km, so terrain, river valleys and local wind shifts are missing. There is no chemistry, no resuspension of deposited dust, and no blast or buoyancy model for the first minutes. The Army's maps come from DTRA modeling with information this page does not have. Where the two disagree, trust the Army's maps, and trust measurements over both. Do not use these numbers for health decisions.</li>
@@ -298,7 +298,8 @@ const LATMAX=GRID.lat0+GRID.dlat*(GRID.ny-1), LONMAX=GRID.lon0+GRID.dlon*(GRID.n
 const LEVELS=[10,80,120,180,300,450,600,800,1000,1300,1600,2000];
 const PLEV=[950,925,900,850];
 const NL=LEVELS.length, NP=GRID.nx*GRID.ny;
-const SRC={lat:40.805,lon:-91.255};
+const SRC={lat:40.805,lon:-91.255}; // assumed detonation point. The real one is not public. The EPA monitor line points back to within 1 km of this.
+const SRC_SHIFTS=[[0.027,0],[-0.027,0],[0,0.0356],[0,-0.0356]]; // 3 km north, south, east, west
 const T0=Date.UTC(2026,10,25,15,0,0); // 9:00 AM CST
 const H_START='2026-11-25T14:00', H_END='2026-11-27T16:00';
 // Fine grid over the first 150 km of the plume track, for the first 12 hours.
@@ -444,13 +445,13 @@ function createSim(met,prm){
   const frac=binFractions(prm.mmd,2.5), vs=DIAM.map(d=>settle(d,prm.rho)), mult=prm.mult||1;
   const r=rng(prm.seed||7);
   const x=new Float64Array(N),y=new Float64Array(N),z=new Float32Array(N),m=new Float64Array(N),up=new Float32Array(N),vp=new Float32Array(N),alive=new Uint8Array(N).fill(1);
-  const cosS=Math.cos(SRC.lat*Math.PI/180);
-  for(let i=0;i<N;i++){ const b=(i/nPer)|0; x[i]=SRC.lon+150*r.n()/(R*cosS); y[i]=SRC.lat+150*r.n()/R; z[i]=1+r.u()*(prm.top-1); m[i]=frac[b]/nPer; }
+  const cosS=Math.cos(SRC.lat*Math.PI/180), S0=prm.src||SRC;
+  for(let i=0;i<N;i++){ const b=(i/nPer)|0; x[i]=S0.lon+150*r.n()/(R*cosS); y[i]=S0.lat+150*r.n()/R; z[i]=1+r.u()*(prm.top-1); m[i]=frac[b]/nPer; }
   const nF=Math.round(hours*3600/FRAME)+1, nc=DGRID.nx*DGRID.ny, keep=prm.frames!==false;
   const fPer=Math.min(nPer,prm.show||nPer), fN=fPer*nb; // only this many particles per bin are kept for drawing
   const fx=keep?new Float32Array(nF*fN):null, fy=keep?new Float32Array(nF*fN):null;
-  // Air monitors: fine particles (10 microns and under) in the lowest 50 m within 3 km, averaged over each 15 minutes.
-  const mons=prm.monitors||[], nM=mons.length, MONR=3000, MONH=50, monAcc=new Float64Array(nM), monAvg=mons.map(()=>new Float32Array(nF)), monCos=mons.map(q=>Math.cos(q.lat*Math.PI/180)), pm10=DIAM.map(d=>d<=10);
+  // Air monitors: fine particles (10 microns and under) in the lowest 50 m within 1.5 km, averaged over each 15 minutes.
+  const mons=prm.monitors||[], nM=mons.length, MONR=prm.monR||1500, MONH=50, monAcc=new Float64Array(nM), monAvg=mons.map(()=>new Float32Array(nF)), monCos=mons.map(q=>Math.cos(q.lat*Math.PI/180)), pm10=DIAM.map(d=>d<=10);
   const dep=new Float64Array(nc), depSnap=keep?new Float32Array(SNAP.length*nc):null;
   const recSfc=RECEPTORS.map(()=>new Float32Array(nF)),recAny=RECEPTORS.map(()=>new Float32Array(nF));
   const bud=new Float32Array(nF*4), cen=new Float32Array(nF*3); let dry=0,wet=0,exited=0,step=0,snapI=0;
@@ -504,7 +505,7 @@ function createSim(met,prm){
     state:()=>({z,m,alive}),
     totals:()=>({dry,wet,exited,air:m.reduce((s,v)=>s+v,0)})};
 }
-g.Core={REACH,NEST,NEST_END,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
+g.Core={SRC_SHIFTS,REACH,NEST,NEST_END,sampleG,GRID,LATMAX,LONMAX,LEVELS,NL,NP,SRC,T0,DIAM,DGRID,SNAP,RECEPTORS,RREC,HREC,R,UGFT2,ARMY,MI2,metUrl,parseMet,sample,settle,vdTurb,binFractions,createSim,stab,cellArea,smoothLoad,areaCurve,areaAbove,massForArea};
 })(typeof window!=='undefined'?window:globalThis);
 </script>
 
@@ -620,9 +621,9 @@ function showCtl(){
 }
 function msg(t){ $('mapmsg').hidden=!t; $('mapmsg').textContent=t||''; }
 const coreSrc=document.getElementById('core').textContent;
-function makeWorker(){ try{ const src=coreSrc+';onmessage=function(e){var d=e.data,s=Core.createSim(d.met,d.prm);while(!s.advance(40))postMessage({id:d.id,p:s.progress});postMessage({id:d.id,done:1,fN:s.fN,fPer:s.fPer,nF:s.nF,FRAME:s.FRAME,fx:s.fx,fy:s.fy,dep:s.dep,depSnap:s.depSnap,recSfc:s.recSfc,recAny:s.recAny,bud:s.bud,cen:s.cen,monAvg:s.monAvg,prm:d.prm},[s.fx.buffer,s.fy.buffer,s.dep.buffer,s.depSnap.buffer,s.bud.buffer,s.cen.buffer]);};';
+function makeWorker(){ try{ const src=coreSrc+';onmessage=function(e){var d=e.data,s=Core.createSim(d.met,d.prm);while(!s.advance(40))postMessage({id:d.id,p:s.progress});if(d.prm.lite){postMessage({id:d.id,done:1,monAvg:s.monAvg,nF:s.nF,FRAME:s.FRAME});return;}postMessage({id:d.id,done:1,fN:s.fN,fPer:s.fPer,nF:s.nF,FRAME:s.FRAME,fx:s.fx,fy:s.fy,dep:s.dep,depSnap:s.depSnap,recSfc:s.recSfc,recAny:s.recAny,bud:s.bud,cen:s.cen,monAvg:s.monAvg,prm:d.prm},[s.fx.buffer,s.fy.buffer,s.dep.buffer,s.depSnap.buffer,s.bud.buffer,s.cen.buffer]);};';
   return new Worker(URL.createObjectURL(new Blob([src],{type:'text/javascript'}))); }catch(e){ return null; } }
-function runPass(nPer){ return new Promise(res=>{ const id=++passId, prm=Object.assign(params(),{nPer});
+function runPass(nPer,extra){ return new Promise(res=>{ const id=++passId, prm=Object.assign(params(),{nPer},extra||{});
   if(worker){worker.terminate();worker=null;} worker=makeWorker();
   if(!worker){ const s=C.createSim(met,prm); (function step(){ if(id!==passId)return res(null); if(s.advance(25))res(s); else { $('prog').style.width=(s.progress*100)+'%'; setTimeout(step); } })(); return; }
   worker.onmessage=e=>{ const d=e.data; if(d.id!==passId)return; if(d.done)res(d); else $('prog').style.width=(d.p*100)+'%'; };
@@ -636,20 +637,38 @@ function accept(s){
   const hi=C.massForArea(curve,C.ARMY.hi.areaMi2*C.MI2,C.ARMY.hi.level), lo=C.massForArea(curve,C.ARMY.lo.areaMi2*C.MI2,C.ARMY.lo.level);
   fits={hi,lo,army:Math.sqrt(hi*lo),epa:null,epaBest:null,fine:0};
   C.binFractions(sim.prm.mmd,2.5).forEach((v,b)=>{ if(C.DIAM[b]<=10) fits.fine+=v; });
-  // The monitors bound the release from above: measured net dose plus two standard errors of its noise,
-  // divided by the modeled dose per kg at the same monitors over the same period.
-  if(epa&&epa.preN>=10&&sim.monAvg&&sim.monAvg.length===epa.stations.length&&epa.tEnd-C.T0>3600e3){ let dm=0,dd=0,s2=0;
-    epa.stations.forEach((st,k)=>{ dm+=st.dose; s2+=st.sdt2; const fEnd=Math.min(sim.nF-1,Math.floor((st.tEnd-C.T0)/1000/sim.FRAME)); for(let f=1;f<=fEnd;f++) dd+=sim.monAvg[k][f]*sim.FRAME/60; });
-    if(dd>0){ const sd=epa.preStd*Math.sqrt(s2); fits.dose=dm; fits.doseSd=sd; fits.epaBest=Math.max(0,dm)/dd; fits.epa=Math.min(3200,Math.max(1e-4,(Math.max(0,dm)+2*sd)/dd)); } }
+  const c=monLimit(sim); if(c){ fits.dose=c.dm; fits.doseSd=c.sd; fits.epaBest=c.best; fits.epaC=c.up; }
+  finishFits();
   applyBasis();
   if(firstRun){ firstRun=false; goNow(); }
   summarize(); update();
 }
+// The monitors bound the release from above: measured net dose plus two standard errors of its noise,
+// divided by the modeled dose per kg at the same monitors over the same period.
+function monLimit(r){
+  if(!epa||epa.preN<10||!r||!r.monAvg||r.monAvg.length!==epa.stations.length||epa.tEnd-C.T0<=3600e3) return null;
+  let dm=0,dd=0,s2=0;
+  epa.stations.forEach((st,k)=>{ dm+=st.dose; s2+=st.sdt2; const fEnd=Math.min(r.nF-1,Math.floor((st.tEnd-C.T0)/1000/r.FRAME)); for(let f=1;f<=fEnd;f++) dd+=r.monAvg[k][f]*r.FRAME/60; });
+  const sd=epa.preStd*Math.sqrt(s2), top=Math.max(0,dm)+2*sd;
+  return {dm,sd,best:dd>0?Math.max(0,dm)/dd:null,up:dd>0?Math.min(3200,Math.max(1e-4,top/dd)):3200};
+}
+// ensUps: limits for detonation points 3 km north, south, east and west of the assumed one.
+let ensUps=null, ensNA=false;
+function finishFits(){
+  if(!fits)return; fits.epa=null; fits.epaWide=null;
+  // Until the detonation-point check has run, show the high case, so the page never understates.
+  if(fits.epaC){ const cap=isFinite(fits.army)?fits.army:3200; fits.epa=cap; if(ensUps&&ensUps.length){ fits.epaWide=Math.max.apply(null,ensUps.concat([fits.epaC])); fits.epa=Math.min(fits.epaWide,cap); } }
+}
 async function run(){
-  if(!met)return; const my=++runId; msg('Running particles…'); $('refine').hidden=true;
+  if(!met)return; const my=++runId; ensUps=null; msg('Running particles…'); $('refine').hidden=true;
   let s=await runPass(1500); if(my!==runId)return; if(!s){ msg('The model run failed. Press Refresh now.'); return; }
   accept(s); msg('');
-  if(worker){ $('refine').hidden=false; s=await runPass(6000); if(my!==runId)return; if(s)accept(s); $('refine').hidden=true; }
+  if(worker){ $('refine').hidden=false; $('refine').textContent='Refining with 48,000 particles…'; s=await runPass(6000); if(my!==runId)return; if(s)accept(s);
+    if(epa&&fits&&fits.epaC){ $('refine').textContent='Checking how much the detonation point matters…'; const ups=[];
+      for(const sh of C.SRC_SHIFTS){ const r=await runPass(2000,{lite:true,frames:false,src:{lat:C.SRC.lat+sh[0],lon:C.SRC.lon+sh[1]}}); if(my!==runId)return; const c=monLimit(r); if(c)ups.push(c.up); }
+      if(ups.length===C.SRC_SHIFTS.length){ ensUps=ups; finishFits(); applyBasis(); summarize(); update(); } }
+    $('refine').hidden=true; }
+  else if(!ensNA){ ensNA=true; summarize(); }
   $('prog').style.width='0';
 }
 let pkLoad=0;
@@ -686,18 +705,21 @@ function fitCard(){
   if(epa) epa.stations.forEach((st,k)=>{ let mp=0; if(sim.monAvg&&sim.monAvg[k]) for(const v of sim.monAvg[k]) if(v>mp)mp=v; post=Math.max(post,st.peak); pre=Math.max(pre,st.prePeak); nRead+=st.n;
     const tr=document.createElement('tr'); tr.style.cursor='default'; [st.id,distBear(st.lat,st.lon).km.toFixed(0),st.peak>0?sig(st.peak):'0',mp>0?sig(mp*M):'0'].forEach(t=>{const td=document.createElement('td');td.textContent=t;tr.appendChild(td);}); tb.appendChild(tr); });
   else { const tr=document.createElement('tr'), td=document.createElement('td'); td.colSpan=4; td.textContent='EPA monitor readings could not be loaded right now.'; tr.appendChild(td); tb.appendChild(tr); }
-  const army=sig(fits.army)+' kg', e=fits.epa?sig(fits.epa)+' kg':'', ef=fits.epa?sig(fits.epa*fits.fine)+' kg':'';
-  const clear=fits.epa&&fits.dose>2*fits.doseSd;
-  const mon=fits.epa?(clear?'The EPA monitors recorded lead above their background. ':'The EPA monitors show no clear lead signal above their background. ')+'If the plume passed them near the ground as modeled, that caps fine lead dust (10 µm and under) at about '+ef+', or about '+e+' of lead in total with the assumed particle sizes.':'';
-  $('fitHead').textContent=basis==='epa'?mon+' The Army planning map assumed about '+army+'.'
+  const army=sig(fits.army)+' kg', e=fits.epa?sig(fits.epa)+' kg':'', ec=fits.epaC?sig(fits.epaC)+' kg':'', ef=fits.epaC?sig(fits.epaC*fits.fine)+' kg':'';
+  const clear=fits.epaC&&fits.dose>2*fits.doseSd;
+  let mon='';
+  if(fits.epaC){ mon=(clear?'The EPA monitors recorded lead above their background. ':'The EPA monitors show no clear lead signal above their background. ')+'For a detonation at the assumed point, that caps the release at about '+ec+' ('+ef+' of it fine dust, 10 µm and under). ';
+    if(fits.epaWide) mon+='The detonation point is not public. If it was up to 3 km away, '+(fits.epaWide>=3199?'the modeled plume passes beside the monitors and they set no limit at all':'the cap rises to about '+sig(fits.epaWide)+' kg')+(fits.epaWide>=fits.army?'. So the monitors cannot rule out the Army planning case, and this page shows that high case.':'.');
+    else mon+=ensNA?'This browser cannot run the check on the detonation point, so the page shows the Army high case.':'Checking how much the unknown detonation point changes that. Until then the page shows the Army high case.'; }
+  $('fitHead').textContent=basis==='epa'?mon+' Release shown: '+e+'. The Army planning map implies about '+army+'.'
     :basis==='army'?'Scaled to the Army pre-detonation map, the release is about '+army+' of lead. '+mon
-    :'Custom release: '+sig(M)+' kg of lead. '+mon+(fits.epa?' The Army planning map assumed about '+army+'.':'');
+    :'Custom release: '+sig(M)+' kg of lead. '+mon+(fits.epaC?' The Army planning map assumed about '+army+'.':'');
   const aHi=C.areaAbove(curve,C.ARMY.hi.level/C.UGFT2/M)/C.MI2, aLo=C.areaAbove(curve,C.ARMY.lo.level/C.UGFT2/M)/C.MI2, rows=[];
-  if(fits.epa) rows.push(['Upper limit from the EPA monitors',e+' total, '+ef+' fine'],['Best match to the EPA monitors',fits.epaBest>0?sig(fits.epaBest)+' kg total':'none above background'],['Net measured dose, all monitors',sig(Math.max(0,fits.dose))+' ± '+sig(fits.doseSd)+' µg·min/m³']);
+  if(fits.epaC) rows.push(['Monitor limit, assumed detonation point',ec],['Monitor limit, point up to 3 km off',fits.epaWide?(fits.epaWide>=3199?'no limit':sig(fits.epaWide)+' kg'):(ensNA?'not checked':'checking…')],['Best match, assumed point',fits.epaBest>0?sig(fits.epaBest)+' kg':'none above background'],['Net measured dose, all monitors',sig(Math.max(0,fits.dose))+' ± '+sig(fits.doseSd)+' µg·min/m³']);
   rows.push(['Release that matches the Army map',army],['Area above 100 µg/ft² at this release',aHi.toFixed(0)+' sq mi (Army map: 29)'],['Area above 5 µg/ft² at this release',aLo.toFixed(0)+' sq mi (Army map: 186)'],['Highest modeled deposit',sig(pkLoad*M*C.UGFT2)+' µg/ft²']);
   if(epa) rows.push(['EPA readings used',nRead+' from '+epa.stations.length+' monitors, latest '+fmtCST(epa.tEnd,true)]);
   kvFill('fitKv',rows);
-  $('fitNote').textContent=(epa?'Model peak is a 15 minute average of fine particles (10 µm and under) near the ground within 3 km of the monitor. The upper limit is the measured dose above each monitor\u2019s pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram. It assumes the monitors sample particles up to 10 µm, which EPA has not confirmed on its public pages. Four ground monitors can miss coarse dust that falls near the site and a plume that passes overhead or to one side, so more lead than this limit could have left the site without their seeing it. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map, which is a forecast, and it is the high case.';
+  $('fitNote').textContent=(epa?'Model peak is a 15 minute average of fine particles (10 µm and under) near the ground within 1.5 km of the monitor. The limit is the measured dose above each monitor\u2019s pre-detonation average, plus two standard errors of the background noise, divided by the modeled dose per kilogram. It assumes the monitors sample particles up to 10 µm, which EPA has not confirmed on its public pages. The four monitors lie on a line that points back to within 1 km of the assumed detonation point, but that is an inference. The wider limit repeats the calculation with the detonation point moved 3 km north, south, east and west and takes the largest. Four ground monitors can also miss coarse dust that falls near the site and a plume that passes overhead, so even the wider limit is not a guarantee. ':'')+'The Army areas are from its 8:00 AM CST Nov 25 pre-detonation map, which is a forecast, and it is the high case.';
 }
 function markSel(){ document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('sel',+tr.dataset.k===selRec)); }
 function drawChart(){
